@@ -2,7 +2,10 @@ module github.com/zamuelfernandes/shipwright
 
 go 1.25.0
 
-require github.com/moby/moby/client v0.5.0
+require (
+	github.com/gorilla/websocket v1.5.3
+	github.com/moby/moby/client v0.5.0
+)
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect

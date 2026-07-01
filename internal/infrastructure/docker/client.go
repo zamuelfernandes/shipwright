@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"sync"
 
 	"github.com/moby/moby/client"
 	"github.com/zamuelfernandes/shipwright/internal/domain"
@@ -48,17 +49,25 @@ func (d *DockerClient) ListContainers(ctx context.Context) ([]domain.Container, 
 	var domainContainers []domain.Container
 	// Mapeamos os items retornados no resultado
 	for _, c := range result.Items {
+		var composeProj, composeServ string
+		if c.Labels != nil {
+			composeProj = c.Labels["com.docker.compose.project"]
+			composeServ = c.Labels["com.docker.compose.service"]
+		}
+
 		// Mapeamento (Data Mapping):
 		// O SDK do Docker retorna structs muito ricas e cheias de metadados internos da API.
 		// Nós mapeamos isso para a nossa entidade simplificada de Domínio.
 		// Em Flutter, isso é similar a um mapper do Data Layer (DTO -> Entity) para isolar
 		// o resto do aplicativo de mudanças nas propriedades cruas da API externa.
 		domainContainers = append(domainContainers, domain.Container{
-			ID:     c.ID,
-			Names:  c.Names,
-			Image:  c.Image,
-			State:  string(c.State),
-			Status: c.Status,
+			ID:          c.ID,
+			Names:       c.Names,
+			Image:       c.Image,
+			State:       string(c.State),
+			Status:      c.Status,
+			ComposeProj: composeProj,
+			ComposeServ: composeServ,
 		})
 	}
 	return domainContainers, nil
@@ -239,4 +248,154 @@ func (d *DockerClient) StreamStats(ctx context.Context, id string, statsChan cha
 			}
 		}
 	}
+}
+
+// StartProject inicia todos os containers de um projeto do Docker Compose concorrentemente.
+func (d *DockerClient) StartProject(ctx context.Context, project string) error {
+	containers, err := d.ListContainers(ctx)
+	if err != nil {
+		return err
+	}
+
+	var targetContainers []string
+	for _, c := range containers {
+		if c.ComposeProj == project && c.State != "running" {
+			targetContainers = append(targetContainers, c.ID)
+		}
+	}
+
+	if len(targetContainers) == 0 {
+		return nil
+	}
+
+	errChan := make(chan error, len(targetContainers))
+	var wg sync.WaitGroup
+
+	// Executa os disparos concorrentemente usando goroutines
+	for _, id := range targetContainers {
+		wg.Add(1)
+		go func(cid string) {
+			defer wg.Done()
+			if err := d.StartContainer(ctx, cid); err != nil {
+				errChan <- err
+			}
+		}(id)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Retorna o primeiro erro encontrado, se houver
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// StopProject para todos os containers de um projeto do Docker Compose concorrentemente.
+func (d *DockerClient) StopProject(ctx context.Context, project string) error {
+	containers, err := d.ListContainers(ctx)
+	if err != nil {
+		return err
+	}
+
+	var targetContainers []string
+	for _, c := range containers {
+		if c.ComposeProj == project && c.State == "running" {
+			targetContainers = append(targetContainers, c.ID)
+		}
+	}
+
+	if len(targetContainers) == 0 {
+		return nil
+	}
+
+	errChan := make(chan error, len(targetContainers))
+	var wg sync.WaitGroup
+
+	for _, id := range targetContainers {
+		wg.Add(1)
+		go func(cid string) {
+			defer wg.Done()
+			if err := d.StopContainer(ctx, cid); err != nil {
+				errChan <- err
+			}
+		}(id)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ExecContainer executa um comando interativo (/bin/bash ou /bin/sh) no container e conecta
+// os fluxos de stdin e stdout (bidirecional).
+func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Reader, stdout io.Writer) error {
+	// 1. Criar a configuração de Exec. Queremos TTY ativado e fluxos anexados.
+	execConfig := client.ExecCreateOptions{
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		TTY:          true,
+		Cmd:          []string{"/bin/bash"}, // Tentamos bash primeiro
+	}
+
+	execCreateResp, err := d.cli.ExecCreate(ctx, id, execConfig)
+	if err != nil {
+		return err
+	}
+
+	// 2. Anexar o fluxo bidirecional
+	attachResp, err := d.cli.ExecAttach(ctx, execCreateResp.ID, client.ExecAttachOptions{
+		TTY: true,
+	})
+	if err != nil {
+		// Se falhar porque o container não tem bash (ex: Alpine), tentamos com sh
+		execConfig.Cmd = []string{"/bin/sh"}
+		execCreateResp, err = d.cli.ExecCreate(ctx, id, execConfig)
+		if err != nil {
+			return err
+		}
+		attachResp, err = d.cli.ExecAttach(ctx, execCreateResp.ID, client.ExecAttachOptions{
+			TTY: true,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	defer attachResp.Close()
+
+	// 3. Iniciar o processo exec
+	_, err = d.cli.ExecStart(ctx, execCreateResp.ID, client.ExecStartOptions{
+		TTY: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 4. Sincroniza o encerramento das Goroutines que realizam o pipe
+	doneChan := make(chan struct{})
+
+	// Container stdout -> WebSocket Writer (stdout)
+	go func() {
+		defer close(doneChan)
+		_, _ = io.Copy(stdout, attachResp.Reader)
+	}()
+
+	// WebSocket Reader (stdin) -> Container stdin
+	go func() {
+		_, _ = io.Copy(attachResp.Conn, stdin)
+		_ = attachResp.CloseWrite()
+	}()
+
+	<-doneChan
+	return nil
 }

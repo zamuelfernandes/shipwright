@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shipwright - Console</title>
+    <!-- Xterm.js para Emulação de Terminal Completa no Navegador -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
     <style>
         /* Design System Tokens */
         :root {
@@ -148,7 +151,7 @@
         main {
             flex: 1;
             padding: 2rem;
-            max-width: 1400px;
+            max-width: 1500px;
             width: 100%;
             margin: 0 auto;
             display: flex;
@@ -164,19 +167,62 @@
         }
 
         .section-list {
-            flex: 2;
+            flex: 1.8;
             min-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Compose Project Cards */
+        .project-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .project-body {
+            overflow-x: auto;
+        }
+
+        body.detail-open .image-col {
+            display: none;
+        }
+
+        .project-header {
+            background-color: #1c1c1f;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
         /* Detail Panel Sidebar */
         .section-detail {
             flex: 1.2;
-            min-width: 400px;
+            min-width: 450px;
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
-            display: none; /* Oculto por padrão */
+            display: none;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.3s ease;
         }
@@ -192,7 +238,7 @@
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .detail-header h3 {
@@ -200,18 +246,55 @@
             font-weight: 600;
         }
 
+        /* Tabs Control */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active-tab {
+            color: var(--brand-color);
+            border-bottom-color: var(--brand-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active-content {
+            display: block;
+        }
+
         /* Metrics Progress Bars */
         .telemetry-group {
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .metric-card {
             background-color: var(--bg-base);
             border: 1px solid var(--border-color);
-            padding: 1rem;
+            padding: 0.85rem 1rem;
             border-radius: 6px;
         }
 
@@ -243,7 +326,7 @@
             transition: width 0.5s ease;
         }
 
-        /* Terminal Console for Logs */
+        /* Terminal Logs Console */
         .terminal {
             background-color: #0c0c0d;
             border: 1px solid var(--border-color);
@@ -251,35 +334,25 @@
             padding: 1rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.75rem;
-            color: #22c55e; /* Verde clássico de terminal */
-            height: 350px;
+            color: #22c55e;
+            height: 380px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-all;
             line-height: 1.5;
         }
 
-        .dashboard-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .dashboard-meta h2 {
-            font-size: 1.25rem;
-            font-weight: 500;
-        }
-
-        /* Table Card */
-        .card-table {
-            background-color: var(--bg-surface);
+        /* Interactive Terminal container for Xterm.js */
+        #xterm-container {
+            background-color: #0c0c0d;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
+            padding: 0.5rem;
+            height: 400px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -292,9 +365,9 @@
         }
 
         th {
-            background-color: #1c1c1f;
+            background-color: #18181b;
             color: var(--text-secondary);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -317,7 +390,6 @@
             background-color: var(--bg-element);
         }
 
-        /* ID Short styling */
         .mono {
             font-family: ui-monospace, SFMono-Regular, monospace;
             font-size: 0.85rem;
@@ -339,7 +411,7 @@
             color: var(--text-secondary);
         }
 
-        /* Status Badges */
+        /* Badges */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -396,14 +468,12 @@
             gap: 0.5rem;
         }
 
-        /* Empty State */
         .empty-state {
-            padding: 4rem 2rem;
+            padding: 3rem 2rem;
             text-align: center;
             color: var(--text-secondary);
         }
 
-        /* Loading indicator overlay */
         .loading-bar {
             height: 3px;
             width: 100%;
@@ -446,70 +516,54 @@
 
     <main>
         <div class="layout-container">
-            <!-- Left Side: Containers List -->
-            <div class="section-list">
-                <div class="dashboard-meta">
-                    <h2>Containers locais</h2>
-                    <span id="containers-count" class="mono">Total: 0</span>
-                </div>
-
-                <div class="card-table">
-                    <table id="containers-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Imagem</th>
-                                <th>Estado</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="containers-body">
-                            <!-- Gerado Dinamicamente -->
-                        </tbody>
-                    </table>
-                    
-                    <div id="empty-state" class="empty-state" style="display: none;">
-                        <h3>Nenhum container encontrado</h3>
-                        <p>Certifique-se de que o Docker está ativo.</p>
-                    </div>
-                </div>
+            <!-- Left Column: Compose Projects and Standalone list -->
+            <div class="section-list" id="projects-container">
+                <!-- Gerado Dinamicamente -->
             </div>
 
-            <!-- Right Side: Live Console (SSE Stats & Logs) -->
+            <!-- Right Column: Interactive Details Panel (SSE Stats, Logs & Xterm exec) -->
             <div class="section-detail" id="details-section">
                 <div class="detail-header">
                     <h3 id="details-title">Monitoramento</h3>
                     <button class="btn btn-close btn-action" onclick="closeStreams()">Fechar</button>
                 </div>
 
-                <div class="telemetry-group">
-                    <!-- CPU Metric -->
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-name">Uso de CPU</span>
-                            <span id="cpu-val" class="mono">0.00%</span>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar" id="cpu-bar"></div>
-                        </div>
-                    </div>
-
-                    <!-- RAM Memory Metric -->
-                    <div class="metric-card">
-                        <div class="metric-header">
-                            <span class="metric-name">Uso de Memória RAM</span>
-                            <span id="mem-val" class="mono">0.0 MB / 0.0 GB (0.00%)</span>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar" id="mem-bar"></div>
-                        </div>
-                    </div>
+                <!-- Tab Buttons -->
+                <div class="tabs-header">
+                    <button class="tab-btn active-tab" id="tab-logs" onclick="switchTab('logs')">Telemetria & Logs</button>
+                    <button class="tab-btn" id="tab-terminal" onclick="switchTab('terminal')">Terminal Exec</button>
                 </div>
 
-                <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Logs do Container (Tempo Real)</h4>
-                <div class="terminal" id="logs-terminal"></div>
+                <!-- Tab 1: Live Logs & Telemetry -->
+                <div class="tab-content active-content" id="content-logs">
+                    <div class="telemetry-group">
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Uso de CPU</span>
+                                <span id="cpu-val" class="mono">0.00%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="cpu-bar"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span class="metric-name">Uso de Memória RAM</span>
+                                <span id="mem-val" class="mono">0.0 MB / 0.0 GB (0.00%)</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="mem-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="terminal" id="logs-terminal"></div>
+                </div>
+
+                <!-- Tab 2: Interactive Terminal (Xterm.js) -->
+                <div class="tab-content" id="content-terminal">
+                    <div id="xterm-container"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -518,7 +572,12 @@
         const loader = document.getElementById('loader');
         let logSource = null;
         let statsSource = null;
+        let term = null;
+        let ws = null;
+        
         let activeContainerId = null;
+        let activeContainerName = null;
+        let activeTab = 'logs';
 
         function showLoading(show) {
             loader.style.display = show ? 'block' : 'none';
@@ -530,7 +589,7 @@
                 const response = await fetch('/api/containers');
                 if (!response.ok) throw new Error('Erro ao buscar containers');
                 const containers = await response.json();
-                renderContainers(containers);
+                groupAndRenderContainers(containers);
             } catch (error) {
                 console.error(error);
                 alert('Erro ao carregar os containers.');
@@ -539,120 +598,269 @@
             }
         }
 
-        function renderContainers(containers) {
-            const tbody = document.getElementById('containers-body');
-            const countLabel = document.getElementById('containers-count');
-            const emptyState = document.getElementById('empty-state');
-            
-            tbody.innerHTML = '';
-            countLabel.textContent = `Total: ${containers ? containers.length : 0}`;
+        function groupAndRenderContainers(containers) {
+            const containerDiv = document.getElementById('projects-container');
+            containerDiv.innerHTML = '';
 
             if (!containers || containers.length === 0) {
-                emptyState.style.display = 'block';
+                containerDiv.innerHTML = `
+                    <div class="project-card">
+                        <div class="empty-state">
+                            <h3>Nenhum container encontrado</h3>
+                            <p>Certifique-se de que o Docker está ativo.</p>
+                        </div>
+                    </div>`;
                 return;
             }
 
-            emptyState.style.display = 'none';
-
+            // Agrupar por projeto Compose
+            const groups = {};
             containers.forEach(c => {
-                const tr = document.createElement('tr');
-                tr.className = 'clickable';
-                if (c.id === activeContainerId) {
-                    tr.classList.add('active-row');
+                const proj = c.compose_project || '_standalone';
+                if (!groups[proj]) {
+                    groups[proj] = [];
+                }
+                groups[proj].push(c);
+            });
+
+            // Renderizar cada grupo
+            Object.keys(groups).forEach(proj => {
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                projectCard.style.marginBottom = '1.5rem';
+
+                const isStandalone = proj === '_standalone';
+                const projName = isStandalone ? 'Containers Avulsos (Sem Compose)' : `Compose: ${proj}`;
+                
+                // Cabeçalho do Projeto
+                let headerActionsHTML = '';
+                if (!isStandalone) {
+                    headerActionsHTML = `
+                        <div class="project-actions">
+                            <button class="btn btn-action btn-start" onclick="startProject('${proj}')">Iniciar Projeto</button>
+                            <button class="btn btn-action btn-stop" onclick="stopProject('${proj}')">Parar Projeto</button>
+                        </div>`;
                 }
 
-                // Ao clicar na linha, abre o monitoramento do container (exceto se clicar nos botões)
-                tr.onclick = (e) => {
-                    if (e.target.tagName !== 'BUTTON') {
-                        openDetails(c.id, name);
-                    }
-                };
-
-                const shortID = c.id.substring(0, 12);
-                const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Sem nome';
-                const name = rawName.startsWith('/') ? rawName.substring(1) : rawName;
-                
-                let badgeClass = 'badge-exited';
-                if (c.state === 'running') badgeClass = 'badge-running';
-                if (c.state === 'paused') badgeClass = 'badge-paused';
-
-                const isRunning = c.state === 'running';
-
-                tr.innerHTML = `
-                    <td class="mono">${shortID}</td>
-                    <td><span class="container-name">${name}</span></td>
-                    <td><span class="image-tag">${c.image}</span></td>
-                    <td><span class="badge ${badgeClass}">${c.state}</span></td>
-                    <td class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">${c.status}</td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="btn btn-action btn-start" ${isRunning ? 'disabled' : ''} onclick="startContainer('${c.id}'); event.stopPropagation();">Iniciar</button>
-                            <button class="btn btn-action btn-stop" ${!isRunning ? 'disabled' : ''} onclick="stopContainer('${c.id}'); event.stopPropagation();">Parar</button>
-                        </div>
-                    </td>
+                projectCard.innerHTML = `
+                    <div class="project-header">
+                        <span class="project-title">📦 ${projName}</span>
+                        ${headerActionsHTML}
+                    </div>
+                    <div class="project-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Serviço / Nome</th>
+                                    <th class="image-col">Imagem</th>
+                                    <th>Estado</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="group-body-${proj}">
+                                <!-- Linhas injetadas -->
+                            </tbody>
+                        </table>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+
+                containerDiv.appendChild(projectCard);
+
+                // Preencher a tabela de containers do grupo
+                const tbody = document.getElementById(`group-body-${proj}`);
+                groups[proj].forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'clickable';
+                    if (c.id === activeContainerId) {
+                        tr.classList.add('active-row');
+                    }
+
+                    tr.onclick = (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            openDetails(c.id, name);
+                        }
+                    };
+
+                    const shortID = c.id.substring(0, 12);
+                    const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Sem nome';
+                    const name = rawName.startsWith('/') ? rawName.substring(1) : rawName;
+                    
+                    const labelName = c.compose_service ? `${c.compose_service} (${name})` : name;
+
+                    let badgeClass = 'badge-exited';
+                    if (c.state === 'running') badgeClass = 'badge-running';
+                    if (c.state === 'paused') badgeClass = 'badge-paused';
+
+                    const isRunning = c.state === 'running';
+
+                    tr.innerHTML = `
+                        <td class="mono">${shortID}</td>
+                        <td><span class="container-name">${labelName}</span></td>
+                        <td class="image-col"><span class="image-tag">${c.image}</span></td>
+                        <td><span class="badge ${badgeClass}">${c.state}</span></td>
+                        <td class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">${c.status}</td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="btn btn-action btn-start" ${isRunning ? 'disabled' : ''} onclick="startContainer('${c.id}'); event.stopPropagation();">Iniciar</button>
+                                <button class="btn btn-action btn-stop" ${!isRunning ? 'disabled' : ''} onclick="stopContainer('${c.id}'); event.stopPropagation();">Parar</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             });
+        }
+
+        // Alternância de abas
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            // Alterar estado dos botões
+            document.getElementById('tab-logs').classList.remove('active-tab');
+            document.getElementById('tab-terminal').classList.remove('active-tab');
+            document.getElementById(`tab-${tab}`).classList.add('active-tab');
+
+            // Alterar conteúdo visível
+            document.getElementById('content-logs').classList.remove('active-content');
+            document.getElementById('content-terminal').classList.remove('active-content');
+            document.getElementById(`content-${tab}`).classList.add('active-content');
+
+            if (tab === 'terminal' && activeContainerId) {
+                // Iniciar terminal interativo xterm
+                startInteractiveTerminal(activeContainerId);
+            } else {
+                // Fechar WebSocket do terminal se voltar para os logs
+                closeTerminalWebSocket();
+            }
         }
 
         function openDetails(containerId, containerName) {
             activeContainerId = containerId;
-            
-            // Destaca a linha selecionada na tabela
-            document.querySelectorAll('#containers-body tr').forEach(row => {
-                row.classList.remove('active-row');
-            });
-            // Encontra a linha clicada e adiciona a classe active-row
-            const rows = document.querySelectorAll('#containers-body tr');
-            loadContainers(); // Recarrega para destacar no próximo render, ou aplica direto:
-            
+            activeContainerName = containerName;
+
             closeStreams();
+            closeTerminalWebSocket();
+
+            document.body.classList.add('detail-open');
 
             // Mostra painel direito
             document.getElementById('details-section').style.display = 'block';
             document.getElementById('details-title').textContent = `Monitorando: ${containerName}`;
             
+            // Voltar para a aba padrão 'logs'
+            switchTab('logs');
+
             const terminal = document.getElementById('logs-terminal');
             terminal.innerHTML = 'Conectando ao fluxo de logs do Docker...\n';
 
-            // 1. Conexão via SSE para os Logs
+            // 1. SSE Logs
             logSource = new EventSource(`/api/containers/${containerId}/logs`);
             logSource.onmessage = function(event) {
-                // Adiciona o log no terminal
                 terminal.innerHTML += event.data + '\n';
-                terminal.scrollTop = terminal.scrollHeight; // Auto scroll
+                terminal.scrollTop = terminal.scrollHeight;
             };
             logSource.onerror = function() {
-                terminal.innerHTML += '\n[Aviso: Conexão de logs interrompida ou container parado.]\n';
+                terminal.innerHTML += '\n[Conexão de logs finalizada ou container inativo.]\n';
                 logSource.close();
             };
 
-            // 2. Conexão via SSE para as Estatísticas (Telemetria)
+            // 2. SSE Telemetria
             statsSource = new EventSource(`/api/containers/${containerId}/stats`);
             statsSource.onmessage = function(event) {
                 const stats = JSON.parse(event.data);
                 
-                // Atualiza CPU
                 document.getElementById('cpu-val').textContent = stats.cpu_percent.toFixed(2) + '%';
                 document.getElementById('cpu-bar').style.width = Math.min(stats.cpu_percent, 100) + '%';
 
-                // Atualiza Memória RAM
                 const usageMb = (stats.memory_usage_bytes / (1024 * 1024)).toFixed(1);
                 const limitGb = (stats.memory_limit_bytes / (1024 * 1024 * 1024)).toFixed(1);
                 document.getElementById('mem-val').textContent = `${usageMb} MB / ${limitGb} GB (${stats.memory_percent.toFixed(2)}%)`;
                 document.getElementById('mem-bar').style.width = Math.min(stats.memory_percent, 100) + '%';
             };
             statsSource.onerror = function() {
-                document.getElementById('cpu-val').textContent = '0.00%';
-                document.getElementById('cpu-bar').style.width = '0%';
-                document.getElementById('mem-val').textContent = '0.0 MB / 0.0 GB (0.00%)';
-                document.getElementById('mem-bar').style.width = '0%';
+                resetTelemetryUI();
                 statsSource.close();
             };
+
+            // Highlight linha selecionada
+            document.querySelectorAll('tr').forEach(row => {
+                row.classList.remove('active-row');
+            });
+            // Recarrega para destacar no próximo render
+            loadContainers();
+        }
+
+        function resetTelemetryUI() {
+            document.getElementById('cpu-val').textContent = '0.00%';
+            document.getElementById('cpu-bar').style.width = '0%';
+            document.getElementById('mem-val').textContent = '0.0 MB / 0.0 GB (0.00%)';
+            document.getElementById('mem-bar').style.width = '0%';
+        }
+
+        function startInteractiveTerminal(containerId) {
+            const container = document.getElementById('xterm-container');
+            container.innerHTML = ''; // Limpar anterior
+
+            // Instancia emulador de terminal VT100 xterm
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 12,
+                theme: {
+                    background: '#0c0c0d',
+                    foreground: '#22c55e', // Verde Hacker clássico
+                    cursor: '#22c55e'
+                }
+            });
+            term.open(container);
+
+            // Conexão WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/api/containers/${containerId}/exec`;
+            
+            term.write('Abrindo canal interativo com o Docker Exec...\r\n');
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                term.write('Conexão ativa. Pressione Enter para começar.\r\n');
+            };
+
+            ws.onmessage = (event) => {
+                term.write(event.data);
+            };
+
+            ws.onclose = () => {
+                term.write('\r\nConexão com o shell encerrada.\r\n');
+            };
+
+            ws.onerror = (err) => {
+                term.write(`\r\nErro de rede: ${err}\r\n`);
+            };
+
+            // Envia teclas digitadas para o Go WebSocket
+            term.onData(data => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(data);
+                }
+            });
+        }
+
+        function closeTerminalWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            if (term) {
+                term.dispose();
+                term = null;
+            }
         }
 
         function closeStreams() {
             activeContainerId = null;
+            activeContainerName = null;
+            document.body.classList.remove('detail-open');
             if (logSource) {
                 logSource.close();
                 logSource = null;
@@ -661,13 +869,39 @@
                 statsSource.close();
                 statsSource = null;
             }
+            closeTerminalWebSocket();
             document.getElementById('details-section').style.display = 'none';
-            // Remove destaque de linhas
-            document.querySelectorAll('#containers-body tr').forEach(row => {
-                row.classList.remove('active-row');
-            });
         }
 
+        // Funções para controle Compose (V2)
+        async function startProject(projName) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/projects/${projName}/start`, { method: 'POST' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erro ao iniciar projeto');
+                loadContainers();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        async function stopProject(projName) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/projects/${projName}/stop`, { method: 'POST' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erro ao parar projeto');
+                loadContainers();
+                closeStreams();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Funções de Container individuais
         async function startContainer(id) {
             showLoading(true);
             try {

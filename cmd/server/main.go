@@ -13,7 +13,7 @@ import (
 
 // main é o ponto de entrada da aplicação.
 func main() {
-	fmt.Println("=== Shipwright (Fase 4: Streaming de Logs & Stats em Tempo Real) ===")
+	fmt.Println("=== Shipwright (Fase V2: Compose Projects & Terminal Interativo) ===")
 
 	// 1. Inicialização da Infraestrutura (Docker Client)
 	dockerClient, err := docker.NewDockerClient()
@@ -27,9 +27,14 @@ func main() {
 	stopUC := usecase.NewStopContainerUseCase(dockerClient)
 	pruneUC := usecase.NewPruneContainersUseCase(dockerClient)
 	
-	// Casos de Uso da Fase 4 para Streaming SSE
+	// Streaming SSE
 	streamLogsUC := usecase.NewStreamLogsUseCase(dockerClient)
 	streamStatsUC := usecase.NewStreamStatsUseCase(dockerClient)
+
+	// V2: Compose e Terminal Exec
+	startProjUC := usecase.NewStartProjectUseCase(dockerClient)
+	stopProjUC := usecase.NewStopProjectUseCase(dockerClient)
+	execUC := usecase.NewExecContainerUseCase(dockerClient)
 
 	// Teste rápido de conexão para garantir que o socket está acessível
 	containers, err := listUC.Execute(context.Background())
@@ -40,7 +45,17 @@ func main() {
 	}
 
 	// 3. Inicialização do roteador HTTP injetando todas as dependências de regras de negócio
-	router := infraHttp.NewRouter(listUC, startUC, stopUC, pruneUC, streamLogsUC, streamStatsUC)
+	router := infraHttp.NewRouter(
+		listUC,
+		startUC,
+		stopUC,
+		pruneUC,
+		streamLogsUC,
+		streamStatsUC,
+		startProjUC,
+		stopProjUC,
+		execUC,
+	)
 
 	// 4. Inicialização do Servidor HTTP na porta local 8080
 	addr := ":8080"

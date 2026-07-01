@@ -4,24 +4,36 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
+	"log"
 	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
 	"github.com/zamuelfernandes/shipwright/ui"
 )
 
-// Router gerencia as rotas HTTP da aplicação, tanto a entrega dos arquivos estáticos da interface
-// quanto os endpoints da API REST do Shipwright.
+// Upgrader para configurar conexões WebSocket
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true // Permite qualquer origem em ambiente de desenvolvimento local
+	},
+}
+
+// Router gerencia as rotas HTTP da aplicação, endpoints REST e conexões WebSocket.
 type Router struct {
-	mux                *http.ServeMux
-	listUseCase        *usecase.ListContainersUseCase
-	startUseCase       *usecase.StartContainerUseCase
-	stopUseCase        *usecase.StopContainerUseCase
-	pruneUseCase       *usecase.PruneContainersUseCase
-	streamLogsUseCase  *usecase.StreamLogsUseCase
-	streamStatsUseCase *usecase.StreamStatsUseCase
+	mux                 *http.ServeMux
+	listUseCase         *usecase.ListContainersUseCase
+	startUseCase        *usecase.StartContainerUseCase
+	stopUseCase         *usecase.StopContainerUseCase
+	pruneUseCase        *usecase.PruneContainersUseCase
+	streamLogsUseCase   *usecase.StreamLogsUseCase
+	streamStatsUseCase  *usecase.StreamStatsUseCase
+	startProjectUseCase *usecase.StartProjectUseCase
+	stopProjectUseCase  *usecase.StopProjectUseCase
+	execUseCase         *usecase.ExecContainerUseCase
 }
 
 // NewRouter recebe os casos de uso necessários por injeção de dependência e configura as rotas.
@@ -32,28 +44,41 @@ func NewRouter(
 	pruneUC *usecase.PruneContainersUseCase,
 	streamLogsUC *usecase.StreamLogsUseCase,
 	streamStatsUC *usecase.StreamStatsUseCase,
+	startProjUC *usecase.StartProjectUseCase,
+	stopProjUC *usecase.StopProjectUseCase,
+	execUC *usecase.ExecContainerUseCase,
 ) *Router {
 	mux := http.NewServeMux()
 
 	r := &Router{
-		mux:                mux,
-		listUseCase:        listUC,
-		startUseCase:       startUC,
-		stopUseCase:        stopUC,
-		pruneUseCase:       pruneUC,
-		streamLogsUseCase:  streamLogsUC,
-		streamStatsUseCase: streamStatsUC,
+		mux:                 mux,
+		listUseCase:         listUC,
+		startUseCase:        startUC,
+		stopUseCase:         stopUC,
+		pruneUseCase:        pruneUC,
+		streamLogsUseCase:   streamLogsUC,
+		streamStatsUseCase:  streamStatsUC,
+		startProjectUseCase: startProjUC,
+		stopProjectUseCase:  stopProjUC,
+		execUseCase:         execUC,
 	}
 
-	// API REST
+	// API REST - Containers individuais
 	mux.HandleFunc("GET /api/containers", r.handleListContainers)
 	mux.HandleFunc("POST /api/containers/{id}/start", r.handleStartContainer)
 	mux.HandleFunc("POST /api/containers/{id}/stop", r.handleStopContainer)
 	mux.HandleFunc("DELETE /api/containers/prune", r.handlePruneContainers)
 
+	// API REST - Projetos Docker Compose (V2)
+	mux.HandleFunc("POST /api/projects/{name}/start", r.handleStartProject)
+	mux.HandleFunc("POST /api/projects/{name}/stop", r.handleStopProject)
+
 	// API de Streaming SSE (Server-Sent Events)
 	mux.HandleFunc("GET /api/containers/{id}/logs", r.handleStreamLogs)
 	mux.HandleFunc("GET /api/containers/{id}/stats", r.handleStreamStats)
+
+	// Terminal Interativo WebSocket (V2)
+	mux.HandleFunc("GET /api/containers/{id}/exec", r.handleExecContainer)
 
 	// Arquivos estáticos da interface embutida
 	distFS, err := fs.Sub(ui.DistFS, "dist")
@@ -132,9 +157,40 @@ func (r *Router) handlePruneContainers(w http.ResponseWriter, req *http.Request)
 	json.NewEncoder(w).Encode(map[string]string{"message": "limpeza de containers concluída"})
 }
 
+// handleStartProject lida com o endpoint POST /api/projects/{name}/start (V2)
+func (r *Router) handleStartProject(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	name := req.PathValue("name")
+
+	err := r.startProjectUseCase.Execute(req.Context(), name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "projeto inicializado com sucesso"})
+}
+
+// handleStopProject lida com o endpoint POST /api/projects/{name}/stop (V2)
+func (r *Router) handleStopProject(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	name := req.PathValue("name")
+
+	err := r.stopProjectUseCase.Execute(req.Context(), name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "projeto pausado com sucesso"})
+}
+
 // handleStreamLogs gerencia o streaming SSE de logs do container
 func (r *Router) handleStreamLogs(w http.ResponseWriter, req *http.Request) {
-	// Configura cabeçalhos necessários para manter a conexão aberta (SSE)
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -142,8 +198,6 @@ func (r *Router) handleStreamLogs(w http.ResponseWriter, req *http.Request) {
 
 	id := req.PathValue("id")
 
-	// A interface Flusher permite enviar dados imediatamente para o cliente
-	// sem esperar que a requisição seja concluída.
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming não suportado", http.StatusInternalServerError)
@@ -153,15 +207,11 @@ func (r *Router) handleStreamLogs(w http.ResponseWriter, req *http.Request) {
 	logsChan := make(chan string, 10)
 	errChan := make(chan error, 1)
 
-	// Usamos o contexto da requisição. Se o usuário fechar a aba/conexão no navegador,
-	// req.Context().Done() é ativado e nós cancelamos a goroutine secundária.
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
 
-	// Dispara o caso de uso em uma Goroutine paralela (semelhante a criar um isolate ou stream no Dart)
 	go r.streamLogsUseCase.Execute(ctx, id, logsChan, errChan)
 
-	// Envia um evento inicial de conexão estabelecida
 	fmt.Fprint(w, "event: open\ndata: conectado aos logs\n\n")
 	flusher.Flush()
 
@@ -177,14 +227,13 @@ func (r *Router) handleStreamLogs(w http.ResponseWriter, req *http.Request) {
 			if !ok {
 				return
 			}
-			// Formato padrão de mensagens SSE: data: <valor>\n\n
 			fmt.Fprintf(w, "data: %s\n\n", logLine)
 			flusher.Flush()
 		}
 	}
 }
 
-// handleStreamStats gerencia o streaming SSE de estatísticas de CPU/RAM do container
+// handleStreamStats gerencia o streaming SSE de estatísticas de CPU/RAM
 func (r *Router) handleStreamStats(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -230,4 +279,58 @@ func (r *Router) handleStreamStats(w http.ResponseWriter, req *http.Request) {
 			flusher.Flush()
 		}
 	}
+}
+
+// handleExecContainer lida com a conexão WebSocket para o terminal interativo (V2)
+func (r *Router) handleExecContainer(w http.ResponseWriter, req *http.Request) {
+	id := req.PathValue("id")
+
+	// Upgrade da conexão HTTP comum para WebSocket
+	conn, err := upgrader.Upgrade(w, req, nil)
+	if err != nil {
+		log.Printf("erro no upgrade do websocket para exec: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	// io.Pipe liga a escrita do WebSocket à leitura do stdin do Exec do Docker
+	stdinReader, stdinWriter := io.Pipe()
+
+	// Goroutine para ler teclas do WebSocket -> escreve no Pipe (stdinWriter)
+	go func() {
+		defer stdinWriter.Close()
+		for {
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				break
+			}
+			_, err = stdinWriter.Write(msg)
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	// Adaptador io.Writer customizado para escrever de volta no WebSocket
+	wsWriter := &wsWriterWrapper{conn: conn}
+
+	// Executa a sessão interativa dentro do container. Bloqueia até a sessão encerrar.
+	err = r.execUseCase.Execute(req.Context(), id, stdinReader, wsWriter)
+	if err != nil {
+		_ = conn.WriteMessage(websocket.TextMessage, []byte("\r\nErro ao iniciar terminal: "+err.Error()+"\r\n"))
+	}
+}
+
+// wsWriterWrapper adapta a conexão WebSocket para que satisfaça a interface io.Writer
+type wsWriterWrapper struct {
+	conn *websocket.Conn
+}
+
+func (w *wsWriterWrapper) Write(p []byte) (n int, err error) {
+	// Escreve os bytes recebidos da saída do terminal do container para o WebSocket como texto
+	err = w.conn.WriteMessage(websocket.TextMessage, p)
+	if err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
