@@ -340,6 +340,7 @@ func (d *DockerClient) StopProject(ctx context.Context, project string) error {
 // ExecContainer executa um comando interativo (/bin/bash ou /bin/sh) no container e conecta
 // os fluxos de stdin e stdout (bidirecional).
 func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Reader, stdout io.Writer) error {
+	log.Printf("[Docker] Iniciando Exec no container %s...", id)
 	// 1. Criar a configuração de Exec. Queremos TTY ativado e fluxos anexados.
 	execConfig := client.ExecCreateOptions{
 		AttachStdin:  true,
@@ -349,58 +350,71 @@ func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Re
 		Cmd:          []string{"/bin/bash"}, // Tentamos bash primeiro
 	}
 
+	log.Printf("[Docker] Tentando criar exec com /bin/bash...")
 	execCreateResp, err := d.cli.ExecCreate(ctx, id, execConfig)
 	if err != nil {
+		log.Printf("[Docker] Erro ao criar exec com /bin/bash: %v", err)
 		return err
 	}
 
 	// 2. Anexar o fluxo bidirecional
+	log.Printf("[Docker] Tentando anexar (Attach) ao exec...")
 	attachResp, err := d.cli.ExecAttach(ctx, execCreateResp.ID, client.ExecAttachOptions{
 		TTY: true,
 	})
 	if err != nil {
+		log.Printf("[Docker] Erro ao anexar com /bin/bash: %v. Tentando fallback para /bin/sh...", err)
 		// Se falhar porque o container não tem bash (ex: Alpine), tentamos com sh
 		execConfig.Cmd = []string{"/bin/sh"}
 		execCreateResp, err = d.cli.ExecCreate(ctx, id, execConfig)
 		if err != nil {
+			log.Printf("[Docker] Erro ao criar exec com fallback /bin/sh: %v", err)
 			return err
 		}
 		attachResp, err = d.cli.ExecAttach(ctx, execCreateResp.ID, client.ExecAttachOptions{
 			TTY: true,
 		})
 		if err != nil {
+			log.Printf("[Docker] Erro ao anexar com fallback /bin/sh: %v", err)
 			return err
 		}
 	}
 	defer attachResp.Close()
+	log.Printf("[Docker] Attach concluído com sucesso para o exec.")
 
 	// 3. Sincroniza o encerramento das Goroutines que realizam o pipe
 	doneChan := make(chan struct{})
 
 	// Container stdout -> WebSocket Writer (stdout)
+	log.Printf("[Docker] Iniciando goroutine de cópia de stdout...")
 	go func() {
 		defer close(doneChan)
-		_, _ = io.Copy(stdout, attachResp.Reader)
+		copied, copyErr := io.Copy(stdout, attachResp.Reader)
+		log.Printf("[Docker] Goroutine stdout finalizada. Bytes copiados: %d, erro: %v", copied, copyErr)
 	}()
 
 	// WebSocket Reader (stdin) -> Container stdin
+	log.Printf("[Docker] Iniciando goroutine de cópia de stdin...")
 	go func() {
-		_, _ = io.Copy(attachResp.Conn, stdin)
+		copied, copyErr := io.Copy(attachResp.Conn, stdin)
+		log.Printf("[Docker] Goroutine stdin finalizada. Bytes copiados: %d, erro: %v", copied, copyErr)
 		_ = attachResp.CloseWrite()
 	}()
 
 	// 4. Iniciar o processo exec em segundo plano para evitar Deadlock.
-	// O método ExecStart bloqueia até o término do processo quando TTY está ativado,
-	// por isso precisamos rodá-lo em segundo plano após termos iniciado a cópia dos fluxos (pipes).
+	log.Printf("[Docker] Disparando ExecStart em segundo plano...")
 	go func() {
 		_, execStartErr := d.cli.ExecStart(ctx, execCreateResp.ID, client.ExecStartOptions{
 			TTY: true,
 		})
 		if execStartErr != nil {
-			log.Printf("erro ao iniciar exec no Docker: %v", execStartErr)
+			log.Printf("[Docker] Erro no ExecStart: %v", execStartErr)
+		} else {
+			log.Printf("[Docker] ExecStart finalizado sem erros.")
 		}
 	}()
 
 	<-doneChan
+	log.Printf("[Docker] Exec finalizado.")
 	return nil
 }

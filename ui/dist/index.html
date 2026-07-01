@@ -737,11 +737,11 @@
         }
 
         function openDetails(containerId, containerName) {
-            activeContainerId = containerId;
-            activeContainerName = containerName;
-
             closeStreams();
             closeTerminalWebSocket();
+
+            activeContainerId = containerId;
+            activeContainerName = containerName;
 
             document.body.classList.add('detail-open');
 
@@ -800,50 +800,64 @@
         }
 
         function startInteractiveTerminal(containerId) {
-            const container = document.getElementById('xterm-container');
-            container.innerHTML = ''; // Limpar anterior
+            try {
+                console.log("[Terminal] Iniciando terminal para container: " + containerId);
+                const container = document.getElementById('xterm-container');
+                container.innerHTML = ''; // Limpar anterior
 
-            // Instancia emulador de terminal VT100 xterm
-            term = new Terminal({
-                cursorBlink: true,
-                fontSize: 12,
-                theme: {
-                    background: '#0c0c0d',
-                    foreground: '#22c55e', // Verde Hacker clássico
-                    cursor: '#22c55e'
+                if (typeof Terminal === 'undefined') {
+                    throw new Error("A classe 'Terminal' (Xterm.js) não está definida. Verifique se o script CDN carregou com sucesso.");
                 }
-            });
-            term.open(container);
 
-            // Conexão WebSocket
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/api/containers/${containerId}/exec`;
-            
-            term.write('Abrindo canal interativo com o Docker Exec...\r\n');
-            ws = new WebSocket(wsUrl);
+                // Instancia emulador de terminal VT100 xterm
+                term = new Terminal({
+                    cursorBlink: true,
+                    fontSize: 12,
+                    theme: {
+                        background: '#0c0c0d',
+                        foreground: '#22c55e', // Verde Hacker clássico
+                        cursor: '#22c55e'
+                    }
+                });
+                term.open(container);
 
-            ws.onopen = () => {
-                term.write('Conexão ativa. Pressione Enter para começar.\r\n');
-            };
+                // Conexão WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/api/containers/${containerId}/exec`;
+                
+                console.log("[Terminal] Conectando WebSocket: " + wsUrl);
+                term.write('Abrindo canal interativo com o Docker Exec...\r\n');
+                ws = new WebSocket(wsUrl);
 
-            ws.onmessage = (event) => {
-                term.write(event.data);
-            };
+                ws.onopen = () => {
+                    console.log("[Terminal] Conexão WebSocket estabelecida com sucesso.");
+                    term.write('Conexão ativa. Pressione Enter para começar.\r\n');
+                };
 
-            ws.onclose = () => {
-                term.write('\r\nConexão com o shell encerrada.\r\n');
-            };
+                ws.onmessage = (event) => {
+                    term.write(event.data);
+                };
 
-            ws.onerror = (err) => {
-                term.write(`\r\nErro de rede: ${err}\r\n`);
-            };
+                ws.onclose = (event) => {
+                    console.log("[Terminal] Conexão WebSocket encerrada. Código: " + event.code + ", Motivo: " + event.reason);
+                    term.write('\r\nConexão com o shell encerrada.\r\n');
+                };
 
-            // Envia teclas digitadas para o Go WebSocket
-            term.onData(data => {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(data);
-                }
-            });
+                ws.onerror = (err) => {
+                    console.error("[Terminal] Erro no WebSocket:", err);
+                    term.write(`\r\nErro de rede: verifique o console do navegador\r\n`);
+                };
+
+                // Envia teclas digitadas para o Go WebSocket
+                term.onData(data => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(data);
+                    }
+                });
+            } catch (err) {
+                alert("Erro ao instanciar terminal: " + err.message);
+                console.error("[Terminal] Falha crítica de inicialização:", err);
+            }
         }
 
         function closeTerminalWebSocket() {

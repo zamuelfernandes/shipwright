@@ -284,14 +284,16 @@ func (r *Router) handleStreamStats(w http.ResponseWriter, req *http.Request) {
 // handleExecContainer lida com a conexão WebSocket para o terminal interativo (V2)
 func (r *Router) handleExecContainer(w http.ResponseWriter, req *http.Request) {
 	id := req.PathValue("id")
+	log.Printf("[HTTP] Recebido pedido de terminal WebSocket para o container: %s", id)
 
 	// Upgrade da conexão HTTP comum para WebSocket
 	conn, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
-		log.Printf("erro no upgrade do websocket para exec: %v", err)
+		log.Printf("[HTTP] Erro no upgrade do websocket para exec: %v", err)
 		return
 	}
 	defer conn.Close()
+	log.Printf("[HTTP] Conexão WebSocket de terminal ativa para o container %s", id)
 
 	// io.Pipe liga a escrita do WebSocket à leitura do stdin do Exec do Docker
 	stdinReader, stdinWriter := io.Pipe()
@@ -317,7 +319,10 @@ func (r *Router) handleExecContainer(w http.ResponseWriter, req *http.Request) {
 	// Executa a sessão interativa dentro do container. Bloqueia até a sessão encerrar.
 	err = r.execUseCase.Execute(req.Context(), id, stdinReader, wsWriter)
 	if err != nil {
+		log.Printf("[HTTP] Erro na execução do terminal no container %s: %v", id, err)
 		_ = conn.WriteMessage(websocket.TextMessage, []byte("\r\nErro ao iniciar terminal: "+err.Error()+"\r\n"))
+	} else {
+		log.Printf("[HTTP] Conexão WebSocket de terminal encerrada para o container %s", id)
 	}
 }
 
