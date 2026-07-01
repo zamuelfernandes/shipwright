@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"log"
 	"sync"
 
 	"github.com/moby/moby/client"
@@ -373,15 +374,7 @@ func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Re
 	}
 	defer attachResp.Close()
 
-	// 3. Iniciar o processo exec
-	_, err = d.cli.ExecStart(ctx, execCreateResp.ID, client.ExecStartOptions{
-		TTY: true,
-	})
-	if err != nil {
-		return err
-	}
-
-	// 4. Sincroniza o encerramento das Goroutines que realizam o pipe
+	// 3. Sincroniza o encerramento das Goroutines que realizam o pipe
 	doneChan := make(chan struct{})
 
 	// Container stdout -> WebSocket Writer (stdout)
@@ -394,6 +387,18 @@ func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Re
 	go func() {
 		_, _ = io.Copy(attachResp.Conn, stdin)
 		_ = attachResp.CloseWrite()
+	}()
+
+	// 4. Iniciar o processo exec em segundo plano para evitar Deadlock.
+	// O método ExecStart bloqueia até o término do processo quando TTY está ativado,
+	// por isso precisamos rodá-lo em segundo plano após termos iniciado a cópia dos fluxos (pipes).
+	go func() {
+		_, execStartErr := d.cli.ExecStart(ctx, execCreateResp.ID, client.ExecStartOptions{
+			TTY: true,
+		})
+		if execStartErr != nil {
+			log.Printf("erro ao iniciar exec no Docker: %v", execStartErr)
+		}
 	}()
 
 	<-doneChan
