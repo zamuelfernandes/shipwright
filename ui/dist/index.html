@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipwright - Console</title>
+    <style>
+        /* Design System Tokens */
+        :root {
+            --bg-base: #121214;
+            --bg-surface: #202024;
+            --bg-element: #29292e;
+            --text-primary: #e1e1e6;
+            --text-secondary: #a8a8b3;
+            
+            --brand-color: #00b37e;
+            --brand-hover: #00875f;
+            
+            --danger-color: #f75a68;
+            --danger-hover: #c73e4a;
+            
+            --warning-color: #e7a74e;
+            --border-color: #323238;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Reset & Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: var(--brand-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-color);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--brand-hover);
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: var(--danger-color);
+            color: #ffffff;
+        }
+
+        .btn-action {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        .btn-start {
+            background-color: rgba(0, 179, 126, 0.1);
+            color: var(--brand-color);
+            border: 1px solid var(--brand-color);
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background-color: var(--brand-color);
+            color: #ffffff;
+        }
+
+        .btn-stop {
+            background-color: rgba(247, 90, 104, 0.1);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background-color: var(--danger-color);
+            color: #ffffff;
+        }
+
+        .btn-close {
+            background-color: var(--bg-element);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+        }
+
+        .btn-close:hover {
+            background-color: #323238;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Layout Grid */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .layout-container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .section-list {
+            flex: 2;
+            min-width: 600px;
+        }
+
+        /* Detail Panel Sidebar */
+        .section-detail {
+            flex: 1.2;
+            min-width: 400px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: none; /* Oculto por padrão */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Metrics Progress Bars */
+        .telemetry-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: var(--bg-base);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-container {
+            height: 8px;
+            background-color: var(--bg-element);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--brand-color);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Terminal Console for Logs */
+        .terminal {
+            background-color: #0c0c0d;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.75rem;
+            color: #22c55e; /* Verde clássico de terminal */
+            height: 350px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .dashboard-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-meta h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        /* Table Card */
+        .card-table {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #1c1c1f;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr.clickable {
+            cursor: pointer;
+        }
+
+        tr.active-row td {
+            background-color: var(--bg-element);
+            border-left: 3px solid var(--brand-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--bg-element);
+        }
+
+        /* ID Short styling */
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .container-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .image-tag {
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 0.8rem;
+            background-color: var(--bg-element);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge-running {
+            background-color: rgba(0, 179, 126, 0.1);
+            color: var(--brand-color);
+        }
+
+        .badge-running::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--brand-color);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--brand-color);
+        }
+
+        .badge-exited {
+            background-color: rgba(168, 168, 179, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .badge-exited::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+        }
+
+        .badge-paused {
+            background-color: rgba(231, 167, 78, 0.1);
+            color: var(--warning-color);
+        }
+
+        .badge-paused::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            background-color: var(--warning-color);
+            border-radius: 50%;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Loading indicator overlay */
+        .loading-bar {
+            height: 3px;
+            width: 100%;
+            background-color: var(--border-color);
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+
+        .loading-bar::after {
+            content: "";
+            display: block;
+            height: 100%;
+            width: 50%;
+            background-color: var(--brand-color);
+            position: absolute;
+            animation: loading-animation 1.5s infinite linear;
+        }
+
+        @keyframes loading-animation {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚓ Shipwright</h1>
+        <div class="header-actions">
+            <button class="btn btn-danger" id="btn-prune" onclick="pruneContainers()">
+                Limpar Sistema (Prune)
+            </button>
+            <button class="btn btn-primary" onclick="loadContainers()">
+                Recarregar
+            </button>
+        </div>
+    </header>
+
+    <div class="loading-bar" id="loader"></div>
+
+    <main>
+        <div class="layout-container">
+            <!-- Left Side: Containers List -->
+            <div class="section-list">
+                <div class="dashboard-meta">
+                    <h2>Containers locais</h2>
+                    <span id="containers-count" class="mono">Total: 0</span>
+                </div>
+
+                <div class="card-table">
+                    <table id="containers-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Imagem</th>
+                                <th>Estado</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="containers-body">
+                            <!-- Gerado Dinamicamente -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="empty-state" class="empty-state" style="display: none;">
+                        <h3>Nenhum container encontrado</h3>
+                        <p>Certifique-se de que o Docker está ativo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Live Console (SSE Stats & Logs) -->
+            <div class="section-detail" id="details-section">
+                <div class="detail-header">
+                    <h3 id="details-title">Monitoramento</h3>
+                    <button class="btn btn-close btn-action" onclick="closeStreams()">Fechar</button>
+                </div>
+
+                <div class="telemetry-group">
+                    <!-- CPU Metric -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-name">Uso de CPU</span>
+                            <span id="cpu-val" class="mono">0.00%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="cpu-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- RAM Memory Metric -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-name">Uso de Memória RAM</span>
+                            <span id="mem-val" class="mono">0.0 MB / 0.0 GB (0.00%)</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="mem-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Logs do Container (Tempo Real)</h4>
+                <div class="terminal" id="logs-terminal"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const loader = document.getElementById('loader');
+        let logSource = null;
+        let statsSource = null;
+        let activeContainerId = null;
+
+        function showLoading(show) {
+            loader.style.display = show ? 'block' : 'none';
+        }
+
+        async function loadContainers() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/containers');
+                if (!response.ok) throw new Error('Erro ao buscar containers');
+                const containers = await response.json();
+                renderContainers(containers);
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao carregar os containers.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderContainers(containers) {
+            const tbody = document.getElementById('containers-body');
+            const countLabel = document.getElementById('containers-count');
+            const emptyState = document.getElementById('empty-state');
+            
+            tbody.innerHTML = '';
+            countLabel.textContent = `Total: ${containers ? containers.length : 0}`;
+
+            if (!containers || containers.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            containers.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'clickable';
+                if (c.id === activeContainerId) {
+                    tr.classList.add('active-row');
+                }
+
+                // Ao clicar na linha, abre o monitoramento do container (exceto se clicar nos botões)
+                tr.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        openDetails(c.id, name);
+                    }
+                };
+
+                const shortID = c.id.substring(0, 12);
+                const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Sem nome';
+                const name = rawName.startsWith('/') ? rawName.substring(1) : rawName;
+                
+                let badgeClass = 'badge-exited';
+                if (c.state === 'running') badgeClass = 'badge-running';
+                if (c.state === 'paused') badgeClass = 'badge-paused';
+
+                const isRunning = c.state === 'running';
+
+                tr.innerHTML = `
+                    <td class="mono">${shortID}</td>
+                    <td><span class="container-name">${name}</span></td>
+                    <td><span class="image-tag">${c.image}</span></td>
+                    <td><span class="badge ${badgeClass}">${c.state}</span></td>
+                    <td class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">${c.status}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn btn-action btn-start" ${isRunning ? 'disabled' : ''} onclick="startContainer('${c.id}'); event.stopPropagation();">Iniciar</button>
+                            <button class="btn btn-action btn-stop" ${!isRunning ? 'disabled' : ''} onclick="stopContainer('${c.id}'); event.stopPropagation();">Parar</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openDetails(containerId, containerName) {
+            activeContainerId = containerId;
+            
+            // Destaca a linha selecionada na tabela
+            document.querySelectorAll('#containers-body tr').forEach(row => {
+                row.classList.remove('active-row');
+            });
+            // Encontra a linha clicada e adiciona a classe active-row
+            const rows = document.querySelectorAll('#containers-body tr');
+            loadContainers(); // Recarrega para destacar no próximo render, ou aplica direto:
+            
+            closeStreams();
+
+            // Mostra painel direito
+            document.getElementById('details-section').style.display = 'block';
+            document.getElementById('details-title').textContent = `Monitorando: ${containerName}`;
+            
+            const terminal = document.getElementById('logs-terminal');
+            terminal.innerHTML = 'Conectando ao fluxo de logs do Docker...\n';
+
+            // 1. Conexão via SSE para os Logs
+            logSource = new EventSource(`/api/containers/${containerId}/logs`);
+            logSource.onmessage = function(event) {
+                // Adiciona o log no terminal
+                terminal.innerHTML += event.data + '\n';
+                terminal.scrollTop = terminal.scrollHeight; // Auto scroll
+            };
+            logSource.onerror = function() {
+                terminal.innerHTML += '\n[Aviso: Conexão de logs interrompida ou container parado.]\n';
+                logSource.close();
+            };
+
+            // 2. Conexão via SSE para as Estatísticas (Telemetria)
+            statsSource = new EventSource(`/api/containers/${containerId}/stats`);
+            statsSource.onmessage = function(event) {
+                const stats = JSON.parse(event.data);
+                
+                // Atualiza CPU
+                document.getElementById('cpu-val').textContent = stats.cpu_percent.toFixed(2) + '%';
+                document.getElementById('cpu-bar').style.width = Math.min(stats.cpu_percent, 100) + '%';
+
+                // Atualiza Memória RAM
+                const usageMb = (stats.memory_usage_bytes / (1024 * 1024)).toFixed(1);
+                const limitGb = (stats.memory_limit_bytes / (1024 * 1024 * 1024)).toFixed(1);
+                document.getElementById('mem-val').textContent = `${usageMb} MB / ${limitGb} GB (${stats.memory_percent.toFixed(2)}%)`;
+                document.getElementById('mem-bar').style.width = Math.min(stats.memory_percent, 100) + '%';
+            };
+            statsSource.onerror = function() {
+                document.getElementById('cpu-val').textContent = '0.00%';
+                document.getElementById('cpu-bar').style.width = '0%';
+                document.getElementById('mem-val').textContent = '0.0 MB / 0.0 GB (0.00%)';
+                document.getElementById('mem-bar').style.width = '0%';
+                statsSource.close();
+            };
+        }
+
+        function closeStreams() {
+            activeContainerId = null;
+            if (logSource) {
+                logSource.close();
+                logSource = null;
+            }
+            if (statsSource) {
+                statsSource.close();
+                statsSource = null;
+            }
+            document.getElementById('details-section').style.display = 'none';
+            // Remove destaque de linhas
+            document.querySelectorAll('#containers-body tr').forEach(row => {
+                row.classList.remove('active-row');
+            });
+        }
+
+        async function startContainer(id) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/containers/${id}/start`, { method: 'POST' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erro ao iniciar container');
+                loadContainers();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        async function stopContainer(id) {
+            showLoading(true);
+            try {
+                const response = await fetch(`/api/containers/${id}/stop`, { method: 'POST' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erro ao parar container');
+                loadContainers();
+                if (id === activeContainerId) {
+                    closeStreams();
+                }
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        async function pruneContainers() {
+            if (!confirm('Tem certeza de que deseja remover todos os containers parados?')) return;
+            showLoading(true);
+            try {
+                const response = await fetch('/api/containers/prune', { method: 'DELETE' });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erro ao fazer prune');
+                alert('Limpeza realizada com sucesso!');
+                loadContainers();
+                closeStreams();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        window.onload = loadContainers;
+    </script>
+</body>
+</html>

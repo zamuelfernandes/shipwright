@@ -1,0 +1,29 @@
+# Binários e Executáveis
+shipwright
+cmd/server/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Ferramenta de builds temporários do Go
+/tmp/
+
+# Logs e arquivos gerados
+*.log
+covreport.html
+coverage.out
+
+# IDEs e Editores de Código
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
