@@ -519,10 +519,10 @@
         </h1>
         <div class="header-actions">
             <button class="btn btn-danger" id="btn-prune" onclick="pruneContainers()">
-                Limpar Sistema (Prune)
+                Clean System (Prune)
             </button>
             <button class="btn btn-primary" onclick="loadContainers(); loadImages();">
-                Recarregar
+                Reload
             </button>
         </div>
     </header>
@@ -536,7 +536,7 @@
                 <!-- Docker Images List (V2.5) -->
                 <div class="project-card">
                     <div class="project-header" style="cursor: pointer;" onclick="toggleCard('images-body-wrapper')">
-                        <span class="project-title">💿 Imagens Docker Locais <span class="toggle-icon"
+                        <span class="project-title">💿 Local Docker Images <span class="toggle-icon"
                                 id="icon-images-body-wrapper"
                                 style="margin-left: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">▼</span></span>
                     </div>
@@ -544,21 +544,21 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID da Imagem</th>
-                                    <th>Tags / Repositório</th>
-                                    <th>Tamanho</th>
-                                    <th>Criado em</th>
+                                    <th>Image ID</th>
+                                    <th>Tags / Repository</th>
+                                    <th>Size</th>
+                                    <th>Created At</th>
                                 </tr>
                             </thead>
                             <tbody id="images-body">
-                                <!-- Preenchido dinamicamente -->
+                                <!-- Populated dynamically -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="projects-container">
-                    <!-- Gerado Dinamicamente -->
+                    <!-- Populated dynamically -->
                 </div>
             </div>
 
@@ -566,15 +566,15 @@
             <div id="details-offscreen" style="display: none;">
                 <div class="section-detail" id="details-section" style="margin-top: 1rem;">
                     <div class="detail-header">
-                        <h3 id="details-title">Monitoramento</h3>
-                        <button class="btn btn-close btn-action" onclick="closeStreams()">Fechar</button>
+                        <h3 id="details-title">Monitoring</h3>
+                        <button class="btn btn-close btn-action" onclick="closeStreams()">Close</button>
                     </div>
 
                     <!-- Telemetry (CPU & RAM) - Sempre visível -->
                     <div class="telemetry-group">
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-name">Uso de CPU</span>
+                                <span class="metric-name">CPU Usage</span>
                                 <span id="cpu-val" class="mono">0.00%</span>
                             </div>
                             <div class="progress-container">
@@ -584,7 +584,7 @@
 
                         <div class="metric-card">
                             <div class="metric-header">
-                                <span class="metric-name">Uso de Memória RAM</span>
+                                <span class="metric-name">RAM Usage</span>
                                 <span id="mem-val" class="mono">0.0 MB / 0.0 GB (0.00%)</span>
                             </div>
                             <div class="progress-container">
@@ -595,8 +595,8 @@
 
                     <!-- Tab Buttons -->
                     <div class="tabs-header">
-                        <button class="tab-btn active-tab" id="tab-logs" onclick="switchTab('logs')">Logs</button>
-                        <button class="tab-btn" id="tab-terminal" onclick="switchTab('terminal')">Terminal Exec</button>
+                        <button class="tab-btn active-tab" id="tab-logs" onclick="switchTab('logs')">Telemetry & Logs</button>
+                        <button class="tab-btn" id="tab-terminal" onclick="switchTab('terminal')">Exec Terminal</button>
                     </div>
 
                     <!-- Tab 1: Live Logs -->
@@ -629,7 +629,7 @@
         }
 
         async function loadContainers() {
-            // Salva o painel de detalhes na área de segurança offscreen antes de recriar as tabelas
+            // Save details panel in the offscreen safety container before recreating tables
             const detailsSection = document.getElementById('details-section');
             const offscreen = document.getElementById('details-offscreen');
             if (detailsSection && offscreen) {
@@ -639,12 +639,12 @@
             showLoading(true);
             try {
                 const response = await fetch('/api/containers');
-                if (!response.ok) throw new Error('Erro ao buscar containers');
+                if (!response.ok) throw new Error('Error fetching containers');
                 const containers = await response.json();
                 groupAndRenderContainers(containers);
             } catch (error) {
                 console.error(error);
-                alert('Erro ao carregar os containers.');
+                alert('Error loading containers.');
             } finally {
                 showLoading(false);
             }
@@ -658,14 +658,14 @@
                 containerDiv.innerHTML = `
                     <div class="project-card">
                         <div class="empty-state">
-                            <h3>Nenhum container encontrado</h3>
-                            <p>Certifique-se de que o Docker está ativo.</p>
+                            <h3>No containers found</h3>
+                            <p>Make sure Docker daemon is active.</p>
                         </div>
                     </div>`;
                 return;
             }
 
-            // Agrupar por projeto Compose
+            // Group by Compose project
             const groups = {};
             containers.forEach(c => {
                 const proj = c.compose_project || '_standalone';
@@ -675,22 +675,22 @@
                 groups[proj].push(c);
             });
 
-            // Renderizar cada grupo
+            // Render each group
             Object.keys(groups).forEach(proj => {
                 const projectCard = document.createElement('div');
                 projectCard.className = 'project-card';
                 projectCard.style.marginBottom = '1.5rem';
 
                 const isStandalone = proj === '_standalone';
-                const projName = isStandalone ? 'Containers Avulsos (Sem Compose)' : `Compose: ${proj}`;
+                const projName = isStandalone ? 'Standalone Containers (No Compose)' : `Compose: ${proj}`;
 
-                // Cabeçalho do Projeto
+                // Project Header
                 let headerActionsHTML = '';
                 if (!isStandalone) {
                     headerActionsHTML = `
                         <div class="project-actions">
-                            <button class="btn btn-action btn-start" onclick="startProject('${proj}')">Iniciar Projeto</button>
-                            <button class="btn btn-action btn-stop" onclick="stopProject('${proj}')">Parar Projeto</button>
+                            <button class="btn btn-action btn-start" onclick="startProject('${proj}')">Start Project</button>
+                            <button class="btn btn-action btn-stop" onclick="stopProject('${proj}')">Stop Project</button>
                         </div>`;
                 }
 
@@ -704,15 +704,15 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Serviço / Nome</th>
-                                    <th class="image-col">Imagem</th>
-                                    <th>Estado</th>
+                                    <th>Service / Name</th>
+                                    <th class="image-col">Image</th>
+                                    <th>State</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="group-body-${proj}">
-                                <!-- Linhas injetadas -->
+                                <!-- Populated dynamically -->
                             </tbody>
                         </table>
                     </div>
@@ -720,7 +720,7 @@
 
                 containerDiv.appendChild(projectCard);
 
-                // Preencher a tabela de containers do grupo
+                // Populate containers table for this group
                 const tbody = document.getElementById(`group-body-${proj}`);
                 groups[proj].forEach(c => {
                     const tr = document.createElement('tr');
@@ -737,7 +737,7 @@
                     };
 
                     const shortID = c.id.substring(0, 12);
-                    const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Sem nome';
+                    const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Unnamed';
                     const name = rawName.startsWith('/') ? rawName.substring(1) : rawName;
 
                     const labelName = c.compose_service ? `${c.compose_service} (${name})` : name;
@@ -756,8 +756,8 @@
                         <td class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">${c.status}</td>
                         <td>
                             <div class="actions-cell">
-                                <button class="btn btn-action btn-start" ${isRunning ? 'disabled' : ''} onclick="startContainer('${c.id}'); event.stopPropagation();">Iniciar</button>
-                                <button class="btn btn-action btn-stop" ${!isRunning ? 'disabled' : ''} onclick="stopContainer('${c.id}'); event.stopPropagation();">Parar</button>
+                                <button class="btn btn-action btn-start" ${isRunning ? 'disabled' : ''} onclick="startContainer('${c.id}'); event.stopPropagation();">Start</button>
+                                <button class="btn btn-action btn-stop" ${!isRunning ? 'disabled' : ''} onclick="stopContainer('${c.id}'); event.stopPropagation();">Stop</button>
                             </div>
                         </td>
                     `;
@@ -767,25 +767,25 @@
             restoreDetailRow();
         }
 
-        // Alternância de abas
+        // Switch tabs
         function switchTab(tab) {
             activeTab = tab;
 
-            // Alterar estado dos botões
+            // Toggle button state
             document.getElementById('tab-logs').classList.remove('active-tab');
             document.getElementById('tab-terminal').classList.remove('active-tab');
             document.getElementById(`tab-${tab}`).classList.add('active-tab');
 
-            // Alterar conteúdo visível
+            // Toggle visible content
             document.getElementById('content-logs').classList.remove('active-content');
             document.getElementById('content-terminal').classList.remove('active-content');
             document.getElementById(`content-${tab}`).classList.add('active-content');
 
             if (tab === 'terminal' && activeContainerId) {
-                // Iniciar terminal interativo xterm
+                // Start interactive xterm terminal
                 startInteractiveTerminal(activeContainerId);
             } else {
-                // Fechar WebSocket do terminal se voltar para os logs
+                // Close terminal WebSocket if returning to logs
                 closeTerminalWebSocket();
             }
         }
@@ -799,7 +799,7 @@
 
             document.body.classList.add('detail-open');
 
-            // Cria a linha de detalhe na tabela diretamente abaixo do container selecionado
+            // Create detail row in the table directly below the selected container
             const detailRow = document.createElement('tr');
             detailRow.id = 'active-detail-row';
 
@@ -809,23 +809,23 @@
             detailCell.style.backgroundColor = 'var(--bg-element)';
             detailCell.style.borderLeft = '3px solid var(--brand-color)';
 
-            // Move o painel de monitoramento para dentro da célula
+            // Move the monitoring section inside the cell
             const detailsSection = document.getElementById('details-section');
             detailsSection.style.display = 'block';
             detailCell.appendChild(detailsSection);
             detailRow.appendChild(detailCell);
 
-            // Insere a linha de detalhe após a linha clicada
+            // Insert the detail row after the clicked row
             rowElement.parentNode.insertBefore(detailRow, rowElement.nextSibling);
             rowElement.classList.add('active-row');
 
-            document.getElementById('details-title').textContent = `Monitorando: ${containerName}`;
+            document.getElementById('details-title').textContent = `Monitoring: ${containerName}`;
 
-            // Voltar para a aba padrão 'logs'
+            // Return to default 'logs' tab
             switchTab('logs');
 
             const terminal = document.getElementById('logs-terminal');
-            terminal.innerHTML = 'Conectando ao fluxo de logs do Docker...\n';
+            terminal.innerHTML = 'Connecting to Docker logs stream...\n';
 
             // 1. SSE Logs
             logSource = new EventSource(`/api/containers/${containerId}/logs`);
@@ -834,11 +834,11 @@
                 terminal.scrollTop = terminal.scrollHeight;
             };
             logSource.onerror = function () {
-                terminal.innerHTML += '\n[Conexão de logs finalizada ou container inativo.]\n';
+                terminal.innerHTML += '\n[Logs connection closed or container inactive.]\n';
                 logSource.close();
             };
 
-            // 2. SSE Telemetria
+            // 2. SSE Telemetry
             statsSource = new EventSource(`/api/containers/${containerId}/stats`);
             statsSource.onmessage = function (event) {
                 const stats = JSON.parse(event.data);
@@ -866,37 +866,37 @@
 
         function startInteractiveTerminal(containerId) {
             try {
-                console.log("[Terminal] Iniciando terminal para container: " + containerId);
+                console.log("[Terminal] Starting terminal for container: " + containerId);
                 const container = document.getElementById('xterm-container');
-                container.innerHTML = ''; // Limpar anterior
+                container.innerHTML = ''; // Clear previous
 
                 if (typeof Terminal === 'undefined') {
-                    throw new Error("A classe 'Terminal' (Xterm.js) não está definida. Verifique se o script CDN carregou com sucesso.");
+                    throw new Error("The 'Terminal' class (Xterm.js) is not defined. Make sure the CDN script loaded successfully.");
                 }
 
-                // Instancia emulador de terminal VT100 xterm
+                // Initialize VT100 xterm terminal emulator
                 term = new Terminal({
                     cursorBlink: true,
                     fontSize: 12,
                     theme: {
                         background: '#0c0c0d',
-                        foreground: '#22c55e', // Verde Hacker clássico
+                        foreground: '#22c55e', // Classic Hacker Green
                         cursor: '#22c55e'
                     }
                 });
                 term.open(container);
 
-                // Conexão WebSocket
+                // WebSocket Connection
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = `${protocol}//${window.location.host}/api/containers/${containerId}/exec`;
 
-                console.log("[Terminal] Conectando WebSocket: " + wsUrl);
-                term.write('Abrindo canal interativo com o Docker Exec...\r\n');
+                console.log("[Terminal] Connecting WebSocket: " + wsUrl);
+                term.write('Opening interactive channel with Docker Exec...\r\n');
                 ws = new WebSocket(wsUrl);
 
                 ws.onopen = () => {
-                    console.log("[Terminal] Conexão WebSocket estabelecida com sucesso.");
-                    term.write('Conexão ativa. Pressione Enter para começar.\r\n');
+                    console.log("[Terminal] WebSocket connection established successfully.");
+                    term.write('Connection active. Press Enter to start.\r\n');
                 };
 
                 ws.onmessage = (event) => {
@@ -904,24 +904,24 @@
                 };
 
                 ws.onclose = (event) => {
-                    console.log("[Terminal] Conexão WebSocket encerrada. Código: " + event.code + ", Motivo: " + event.reason);
-                    term.write('\r\nConexão com o shell encerrada.\r\n');
+                    console.log("[Terminal] WebSocket connection closed. Code: " + event.code + ", Reason: " + event.reason);
+                    term.write('\r\nShell connection closed.\r\n');
                 };
 
                 ws.onerror = (err) => {
-                    console.error("[Terminal] Erro no WebSocket:", err);
-                    term.write(`\r\nErro de rede: verifique o console do navegador\r\n`);
+                    console.error("[Terminal] WebSocket error:", err);
+                    term.write(`\r\nNetwork error: check browser console\r\n`);
                 };
 
-                // Envia teclas digitadas para o Go WebSocket
+                // Send typed keys to the Go WebSocket
                 term.onData(data => {
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         ws.send(data);
                     }
                 });
             } catch (err) {
-                alert("Erro ao instanciar terminal: " + err.message);
-                console.error("[Terminal] Falha crítica de inicialização:", err);
+                alert("Error initializing terminal: " + err.message);
+                console.error("[Terminal] Critical initialization failure:", err);
             }
         }
 
@@ -941,12 +941,12 @@
             activeContainerName = null;
             document.body.classList.remove('detail-open');
 
-            // Remove a classe active-row de qualquer linha
+            // Remove active-row class from all rows
             document.querySelectorAll('tr').forEach(row => {
                 row.classList.remove('active-row');
             });
 
-            // Move o painel de monitoramento de volta para a área offscreen
+            // Move the monitoring section back to the offscreen container
             const detailsSection = document.getElementById('details-section');
             if (detailsSection) {
                 detailsSection.style.display = 'none';
@@ -954,7 +954,7 @@
                 if (offscreen) offscreen.appendChild(detailsSection);
             }
 
-            // Remove a linha de detalhe da tabela
+            // Remove detail row from table
             const activeDetailRow = document.getElementById('active-detail-row');
             if (activeDetailRow) {
                 activeDetailRow.parentNode.removeChild(activeDetailRow);
@@ -974,7 +974,7 @@
         function restoreDetailRow() {
             if (!activeContainerId) return;
 
-            // Encontra a TR correspondente
+            // Find matching table row
             const activeRow = document.querySelector(`tr[data-id="${activeContainerId}"]`);
             if (activeRow) {
                 activeRow.classList.add('active-row');
@@ -1005,10 +1005,10 @@
             try {
                 const response = await fetch(`/api/projects/${projName}/start`, { method: 'POST' });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Erro ao iniciar projeto');
+                if (!response.ok) throw new Error(data.error || 'Error starting Compose project');
                 loadContainers();
             } catch (error) {
-                alert(`Erro: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 showLoading(false);
             }
         }
@@ -1018,11 +1018,11 @@
             try {
                 const response = await fetch(`/api/projects/${projName}/stop`, { method: 'POST' });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Erro ao parar projeto');
+                if (!response.ok) throw new Error(data.error || 'Error stopping Compose project');
                 loadContainers();
                 closeStreams();
             } catch (error) {
-                alert(`Erro: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 showLoading(false);
             }
         }
@@ -1033,10 +1033,10 @@
             try {
                 const response = await fetch(`/api/containers/${id}/start`, { method: 'POST' });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Erro ao iniciar container');
+                if (!response.ok) throw new Error(data.error || 'Error starting container');
                 loadContainers();
             } catch (error) {
-                alert(`Erro: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 showLoading(false);
             }
         }
@@ -1046,29 +1046,29 @@
             try {
                 const response = await fetch(`/api/containers/${id}/stop`, { method: 'POST' });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Erro ao parar container');
+                if (!response.ok) throw new Error(data.error || 'Error stopping container');
                 loadContainers();
                 if (id === activeContainerId) {
                     closeStreams();
                 }
             } catch (error) {
-                alert(`Erro: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 showLoading(false);
             }
         }
 
         async function pruneContainers() {
-            if (!confirm('Tem certeza de que deseja remover todos os containers parados?')) return;
+            if (!confirm('Are you sure you want to prune all stopped containers?')) return;
             showLoading(true);
             try {
                 const response = await fetch('/api/containers/prune', { method: 'DELETE' });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Erro ao fazer prune');
-                alert('Limpeza realizada com sucesso!');
+                if (!response.ok) throw new Error(data.error || 'Error pruning stopped containers');
+                alert('System prune completed successfully!');
                 loadContainers();
                 closeStreams();
             } catch (error) {
-                alert(`Erro: ${error.message}`);
+                alert(`Error: ${error.message}`);
                 showLoading(false);
             }
         }
@@ -1088,11 +1088,11 @@
         async function loadImages() {
             try {
                 const response = await fetch('/api/images');
-                if (!response.ok) throw new Error('Erro ao buscar imagens');
+                if (!response.ok) throw new Error('Error fetching images');
                 const images = await response.json();
                 renderImages(images);
             } catch (error) {
-                console.error("Erro ao carregar imagens: ", error);
+                console.error("Error loading images: ", error);
             }
         }
 
@@ -1104,7 +1104,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="4" class="empty-state" style="text-align: center; color: var(--text-secondary);">
-                            Nenhuma imagem encontrada.
+                            No images found.
                         </td>
                     </tr>`;
                 return;
@@ -1113,11 +1113,11 @@
             images.forEach(img => {
                 const tr = document.createElement('tr');
 
-                // Remove prefixo sha256: do ID
+                // Remove sha256: prefix from ID
                 const shortID = img.id.replace('sha256:', '').substring(0, 12);
 
-                // Formata as tags
-                let tagsStr = '<span class="image-tag" style="color: var(--text-secondary); opacity: 0.7;">dangling / sem tag</span>';
+                // Format tags
+                let tagsStr = '<span class="image-tag" style="color: var(--text-secondary); opacity: 0.7;">dangling / untagged</span>';
                 if (img.tags && img.tags.length > 0) {
                     tagsStr = img.tags.map(t => `<span class="image-tag" style="margin-right: 0.3rem; font-weight: 500;">${t}</span>`).join(' ');
                 }
@@ -1145,7 +1145,7 @@
 
         function formatDate(timestamp) {
             const date = new Date(timestamp * 1000);
-            return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+            return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US');
         }
 
         window.onload = () => {
