@@ -30,4 +30,7 @@ type ContainerRepository interface {
 	StartProject(ctx context.Context, project string) error
 	StopProject(ctx context.Context, project string) error
 	ExecContainer(ctx context.Context, id string, stdin io.Reader, stdout io.Writer) error
+
+	// Método para listagem de Imagens
+	ListImages(ctx context.Context) ([]Image, error)
 }

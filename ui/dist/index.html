@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,13 +16,13 @@
             --bg-element: #29292e;
             --text-primary: #e1e1e6;
             --text-secondary: #a8a8b3;
-            
+
             --brand-color: #00b37e;
             --brand-hover: #00875f;
-            
+
             --danger-color: #f75a68;
             --danger-hover: #c73e4a;
-            
+
             --warning-color: #e7a74e;
             --border-color: #323238;
             --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -161,14 +162,13 @@
 
         .layout-container {
             display: flex;
+            flex-direction: column;
             gap: 2rem;
-            align-items: flex-start;
-            flex-wrap: wrap;
+            width: 100%;
         }
 
         .section-list {
-            flex: 1.8;
-            min-width: 600px;
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 2rem;
@@ -187,9 +187,7 @@
             overflow-x: auto;
         }
 
-        body.detail-open .image-col {
-            display: none;
-        }
+
 
         .project-header {
             background-color: #1c1c1f;
@@ -216,8 +214,7 @@
 
         /* Detail Panel Sidebar */
         .section-detail {
-            flex: 1.2;
-            min-width: 450px;
+            width: 100%;
             background-color: var(--bg-surface);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -228,8 +225,15 @@
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .detail-header {
@@ -359,7 +363,8 @@
             text-align: left;
         }
 
-        th, td {
+        th,
+        td {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
         }
@@ -494,11 +499,17 @@
         }
 
         @keyframes loading-animation {
-            0% { left: -50%; }
-            100% { left: 100%; }
+            0% {
+                left: -50%;
+            }
+
+            100% {
+                left: 100%;
+            }
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>
@@ -509,7 +520,7 @@
             <button class="btn btn-danger" id="btn-prune" onclick="pruneContainers()">
                 Limpar Sistema (Prune)
             </button>
-            <button class="btn btn-primary" onclick="loadContainers()">
+            <button class="btn btn-primary" onclick="loadContainers(); loadImages();">
                 Recarregar
             </button>
         </div>
@@ -519,26 +530,46 @@
 
     <main>
         <div class="layout-container">
-            <!-- Left Column: Compose Projects and Standalone list -->
-            <div class="section-list" id="projects-container">
-                <!-- Gerado Dinamicamente -->
+            <!-- Left Column: Compose Projects, Standalone list and Docker Images -->
+            <div class="section-list">
+                <!-- Docker Images List (V2.5) -->
+                <div class="project-card">
+                    <div class="project-header" style="cursor: pointer;" onclick="toggleCard('images-body-wrapper')">
+                        <span class="project-title">💿 Imagens Docker Locais <span class="toggle-icon"
+                                id="icon-images-body-wrapper"
+                                style="margin-left: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">▼</span></span>
+                    </div>
+                    <div class="project-body" id="images-body-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID da Imagem</th>
+                                    <th>Tags / Repositório</th>
+                                    <th>Tamanho</th>
+                                    <th>Criado em</th>
+                                </tr>
+                            </thead>
+                            <tbody id="images-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="projects-container">
+                    <!-- Gerado Dinamicamente -->
+                </div>
             </div>
 
-            <!-- Right Column: Interactive Details Panel (SSE Stats, Logs & Xterm exec) -->
-            <div class="section-detail" id="details-section">
-                <div class="detail-header">
-                    <h3 id="details-title">Monitoramento</h3>
-                    <button class="btn btn-close btn-action" onclick="closeStreams()">Fechar</button>
-                </div>
+            <!-- Detached offscreen container to host details-section when not active -->
+            <div id="details-offscreen" style="display: none;">
+                <div class="section-detail" id="details-section" style="margin-top: 1rem;">
+                    <div class="detail-header">
+                        <h3 id="details-title">Monitoramento</h3>
+                        <button class="btn btn-close btn-action" onclick="closeStreams()">Fechar</button>
+                    </div>
 
-                <!-- Tab Buttons -->
-                <div class="tabs-header">
-                    <button class="tab-btn active-tab" id="tab-logs" onclick="switchTab('logs')">Telemetria & Logs</button>
-                    <button class="tab-btn" id="tab-terminal" onclick="switchTab('terminal')">Terminal Exec</button>
-                </div>
-
-                <!-- Tab 1: Live Logs & Telemetry -->
-                <div class="tab-content active-content" id="content-logs">
+                    <!-- Telemetry (CPU & RAM) - Sempre visível -->
                     <div class="telemetry-group">
                         <div class="metric-card">
                             <div class="metric-header">
@@ -560,12 +591,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="terminal" id="logs-terminal"></div>
-                </div>
 
-                <!-- Tab 2: Interactive Terminal (Xterm.js) -->
-                <div class="tab-content" id="content-terminal">
-                    <div id="xterm-container"></div>
+                    <!-- Tab Buttons -->
+                    <div class="tabs-header">
+                        <button class="tab-btn active-tab" id="tab-logs" onclick="switchTab('logs')">Logs</button>
+                        <button class="tab-btn" id="tab-terminal" onclick="switchTab('terminal')">Terminal Exec</button>
+                    </div>
+
+                    <!-- Tab 1: Live Logs -->
+                    <div class="tab-content active-content" id="content-logs">
+                        <div class="terminal" id="logs-terminal"></div>
+                    </div>
+
+                    <!-- Tab 2: Interactive Terminal (Xterm.js) -->
+                    <div class="tab-content" id="content-terminal">
+                        <div id="xterm-container"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -577,7 +618,7 @@
         let statsSource = null;
         let term = null;
         let ws = null;
-        
+
         let activeContainerId = null;
         let activeContainerName = null;
         let activeTab = 'logs';
@@ -587,6 +628,13 @@
         }
 
         async function loadContainers() {
+            // Salva o painel de detalhes na área de segurança offscreen antes de recriar as tabelas
+            const detailsSection = document.getElementById('details-section');
+            const offscreen = document.getElementById('details-offscreen');
+            if (detailsSection && offscreen) {
+                offscreen.appendChild(detailsSection);
+            }
+
             showLoading(true);
             try {
                 const response = await fetch('/api/containers');
@@ -634,7 +682,7 @@
 
                 const isStandalone = proj === '_standalone';
                 const projName = isStandalone ? 'Containers Avulsos (Sem Compose)' : `Compose: ${proj}`;
-                
+
                 // Cabeçalho do Projeto
                 let headerActionsHTML = '';
                 if (!isStandalone) {
@@ -646,11 +694,11 @@
                 }
 
                 projectCard.innerHTML = `
-                    <div class="project-header">
-                        <span class="project-title">📦 ${projName}</span>
+                    <div class="project-header" style="cursor: pointer;" onclick="if (event.target.tagName !== 'BUTTON') { toggleCard('group-body-wrapper-${proj}') }">
+                        <span class="project-title">📦 ${projName} <span class="toggle-icon" id="icon-group-body-wrapper-${proj}" style="margin-left: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">▼</span></span>
                         ${headerActionsHTML}
                     </div>
-                    <div class="project-body">
+                    <div class="project-body" id="group-body-wrapper-${proj}">
                         <table>
                             <thead>
                                 <tr>
@@ -676,20 +724,21 @@
                 groups[proj].forEach(c => {
                     const tr = document.createElement('tr');
                     tr.className = 'clickable';
+                    tr.setAttribute('data-id', c.id);
                     if (c.id === activeContainerId) {
                         tr.classList.add('active-row');
                     }
 
                     tr.onclick = (e) => {
                         if (e.target.tagName !== 'BUTTON') {
-                            openDetails(c.id, name);
+                            openDetails(c.id, name, tr);
                         }
                     };
 
                     const shortID = c.id.substring(0, 12);
                     const rawName = c.names && c.names.length > 0 ? c.names[0] : 'Sem nome';
                     const name = rawName.startsWith('/') ? rawName.substring(1) : rawName;
-                    
+
                     const labelName = c.compose_service ? `${c.compose_service} (${name})` : name;
 
                     let badgeClass = 'badge-exited';
@@ -714,12 +763,13 @@
                     tbody.appendChild(tr);
                 });
             });
+            restoreDetailRow();
         }
 
         // Alternância de abas
         function switchTab(tab) {
             activeTab = tab;
-            
+
             // Alterar estado dos botões
             document.getElementById('tab-logs').classList.remove('active-tab');
             document.getElementById('tab-terminal').classList.remove('active-tab');
@@ -739,7 +789,7 @@
             }
         }
 
-        function openDetails(containerId, containerName) {
+        function openDetails(containerId, containerName, rowElement) {
             closeStreams();
             closeTerminalWebSocket();
 
@@ -748,10 +798,28 @@
 
             document.body.classList.add('detail-open');
 
-            // Mostra painel direito
-            document.getElementById('details-section').style.display = 'block';
+            // Cria a linha de detalhe na tabela diretamente abaixo do container selecionado
+            const detailRow = document.createElement('tr');
+            detailRow.id = 'active-detail-row';
+
+            const detailCell = document.createElement('td');
+            detailCell.colSpan = 6;
+            detailCell.style.padding = '1.5rem';
+            detailCell.style.backgroundColor = 'var(--bg-element)';
+            detailCell.style.borderLeft = '3px solid var(--brand-color)';
+
+            // Move o painel de monitoramento para dentro da célula
+            const detailsSection = document.getElementById('details-section');
+            detailsSection.style.display = 'block';
+            detailCell.appendChild(detailsSection);
+            detailRow.appendChild(detailCell);
+
+            // Insere a linha de detalhe após a linha clicada
+            rowElement.parentNode.insertBefore(detailRow, rowElement.nextSibling);
+            rowElement.classList.add('active-row');
+
             document.getElementById('details-title').textContent = `Monitorando: ${containerName}`;
-            
+
             // Voltar para a aba padrão 'logs'
             switchTab('logs');
 
@@ -760,20 +828,20 @@
 
             // 1. SSE Logs
             logSource = new EventSource(`/api/containers/${containerId}/logs`);
-            logSource.onmessage = function(event) {
+            logSource.onmessage = function (event) {
                 terminal.innerHTML += event.data + '\n';
                 terminal.scrollTop = terminal.scrollHeight;
             };
-            logSource.onerror = function() {
+            logSource.onerror = function () {
                 terminal.innerHTML += '\n[Conexão de logs finalizada ou container inativo.]\n';
                 logSource.close();
             };
 
             // 2. SSE Telemetria
             statsSource = new EventSource(`/api/containers/${containerId}/stats`);
-            statsSource.onmessage = function(event) {
+            statsSource.onmessage = function (event) {
                 const stats = JSON.parse(event.data);
-                
+
                 document.getElementById('cpu-val').textContent = stats.cpu_percent.toFixed(2) + '%';
                 document.getElementById('cpu-bar').style.width = Math.min(stats.cpu_percent, 100) + '%';
 
@@ -782,17 +850,10 @@
                 document.getElementById('mem-val').textContent = `${usageMb} MB / ${limitGb} GB (${stats.memory_percent.toFixed(2)}%)`;
                 document.getElementById('mem-bar').style.width = Math.min(stats.memory_percent, 100) + '%';
             };
-            statsSource.onerror = function() {
+            statsSource.onerror = function () {
                 resetTelemetryUI();
                 statsSource.close();
             };
-
-            // Highlight linha selecionada
-            document.querySelectorAll('tr').forEach(row => {
-                row.classList.remove('active-row');
-            });
-            // Recarrega para destacar no próximo render
-            loadContainers();
         }
 
         function resetTelemetryUI() {
@@ -827,7 +888,7 @@
                 // Conexão WebSocket
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = `${protocol}//${window.location.host}/api/containers/${containerId}/exec`;
-                
+
                 console.log("[Terminal] Conectando WebSocket: " + wsUrl);
                 term.write('Abrindo canal interativo com o Docker Exec...\r\n');
                 ws = new WebSocket(wsUrl);
@@ -878,6 +939,26 @@
             activeContainerId = null;
             activeContainerName = null;
             document.body.classList.remove('detail-open');
+
+            // Remove a classe active-row de qualquer linha
+            document.querySelectorAll('tr').forEach(row => {
+                row.classList.remove('active-row');
+            });
+
+            // Move o painel de monitoramento de volta para a área offscreen
+            const detailsSection = document.getElementById('details-section');
+            if (detailsSection) {
+                detailsSection.style.display = 'none';
+                const offscreen = document.getElementById('details-offscreen');
+                if (offscreen) offscreen.appendChild(detailsSection);
+            }
+
+            // Remove a linha de detalhe da tabela
+            const activeDetailRow = document.getElementById('active-detail-row');
+            if (activeDetailRow) {
+                activeDetailRow.parentNode.removeChild(activeDetailRow);
+            }
+
             if (logSource) {
                 logSource.close();
                 logSource = null;
@@ -887,7 +968,34 @@
                 statsSource = null;
             }
             closeTerminalWebSocket();
-            document.getElementById('details-section').style.display = 'none';
+        }
+
+        function restoreDetailRow() {
+            if (!activeContainerId) return;
+
+            // Encontra a TR correspondente
+            const activeRow = document.querySelector(`tr[data-id="${activeContainerId}"]`);
+            if (activeRow) {
+                activeRow.classList.add('active-row');
+
+                const detailRow = document.createElement('tr');
+                detailRow.id = 'active-detail-row';
+
+                const detailCell = document.createElement('td');
+                detailCell.colSpan = 6;
+                detailCell.style.padding = '1.5rem';
+                detailCell.style.backgroundColor = 'var(--bg-element)';
+                detailCell.style.borderLeft = '3px solid var(--brand-color)';
+
+                const detailsSection = document.getElementById('details-section');
+                detailsSection.style.display = 'block';
+                detailCell.appendChild(detailsSection);
+                detailRow.appendChild(detailCell);
+
+                activeRow.parentNode.insertBefore(detailRow, activeRow.nextSibling);
+            } else {
+                closeStreams();
+            }
         }
 
         // Funções para controle Compose (V2)
@@ -964,7 +1072,86 @@
             }
         }
 
-        window.onload = loadContainers;
+        function toggleCard(bodyId) {
+            const body = document.getElementById(bodyId);
+            const icon = document.getElementById('icon-' + bodyId);
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                if (icon) icon.textContent = '▼';
+            } else {
+                body.style.display = 'none';
+                if (icon) icon.textContent = '▲';
+            }
+        }
+
+        async function loadImages() {
+            try {
+                const response = await fetch('/api/images');
+                if (!response.ok) throw new Error('Erro ao buscar imagens');
+                const images = await response.json();
+                renderImages(images);
+            } catch (error) {
+                console.error("Erro ao carregar imagens: ", error);
+            }
+        }
+
+        function renderImages(images) {
+            const tbody = document.getElementById('images-body');
+            tbody.innerHTML = '';
+
+            if (!images || images.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state" style="text-align: center; color: var(--text-secondary);">
+                            Nenhuma imagem encontrada.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            images.forEach(img => {
+                const tr = document.createElement('tr');
+
+                // Remove prefixo sha256: do ID
+                const shortID = img.id.replace('sha256:', '').substring(0, 12);
+
+                // Formata as tags
+                let tagsStr = '<span class="image-tag" style="color: var(--text-secondary); opacity: 0.7;">dangling / sem tag</span>';
+                if (img.tags && img.tags.length > 0) {
+                    tagsStr = img.tags.map(t => `<span class="image-tag" style="margin-right: 0.3rem; font-weight: 500;">${t}</span>`).join(' ');
+                }
+
+                const sizeStr = formatBytes(img.size);
+                const createdStr = formatDate(img.created);
+
+                tr.innerHTML = `
+                    <td class="mono">${shortID}</td>
+                    <td>${tagsStr}</td>
+                    <td class="mono">${sizeStr}</td>
+                    <td class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">${createdStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
+        }
+
+        window.onload = () => {
+            loadContainers();
+            loadImages();
+        };
     </script>
 </body>
+
 </html>

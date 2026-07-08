@@ -418,3 +418,23 @@ func (d *DockerClient) ExecContainer(ctx context.Context, id string, stdin io.Re
 	log.Printf("[Docker] Exec finalizado.")
 	return nil
 }
+
+// ListImages busca as imagens do host usando o SDK do Docker.
+func (d *DockerClient) ListImages(ctx context.Context) ([]domain.Image, error) {
+	result, err := d.cli.ImageList(ctx, client.ImageListOptions{All: false})
+	if err != nil {
+		return nil, err
+	}
+
+	var domainImages []domain.Image
+	for _, img := range result.Items {
+		domainImages = append(domainImages, domain.Image{
+			ID:      img.ID,
+			Tags:    img.RepoTags,
+			Size:    img.Size,
+			Created: img.Created,
+		})
+	}
+	return domainImages, nil
+}
+

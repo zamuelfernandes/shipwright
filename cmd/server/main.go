@@ -35,6 +35,7 @@ func main() {
 	startProjUC := usecase.NewStartProjectUseCase(dockerClient)
 	stopProjUC := usecase.NewStopProjectUseCase(dockerClient)
 	execUC := usecase.NewExecContainerUseCase(dockerClient)
+	listImagesUC := usecase.NewListImagesUseCase(dockerClient)
 
 	// Teste rápido de conexão para garantir que o socket está acessível
 	containers, err := listUC.Execute(context.Background())
@@ -55,6 +56,7 @@ func main() {
 		startProjUC,
 		stopProjUC,
 		execUC,
+		listImagesUC,
 	)
 
 	// 4. Inicialização do Servidor HTTP na porta local 8080

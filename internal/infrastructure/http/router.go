@@ -34,6 +34,7 @@ type Router struct {
 	startProjectUseCase *usecase.StartProjectUseCase
 	stopProjectUseCase  *usecase.StopProjectUseCase
 	execUseCase         *usecase.ExecContainerUseCase
+	listImagesUseCase   *usecase.ListImagesUseCase
 }
 
 // NewRouter recebe os casos de uso necessários por injeção de dependência e configura as rotas.
@@ -47,6 +48,7 @@ func NewRouter(
 	startProjUC *usecase.StartProjectUseCase,
 	stopProjUC *usecase.StopProjectUseCase,
 	execUC *usecase.ExecContainerUseCase,
+	listImagesUC *usecase.ListImagesUseCase,
 ) *Router {
 	mux := http.NewServeMux()
 
@@ -61,6 +63,7 @@ func NewRouter(
 		startProjectUseCase: startProjUC,
 		stopProjectUseCase:  stopProjUC,
 		execUseCase:         execUC,
+		listImagesUseCase:   listImagesUC,
 	}
 
 	// API REST - Containers individuais
@@ -72,6 +75,9 @@ func NewRouter(
 	// API REST - Projetos Docker Compose (V2)
 	mux.HandleFunc("POST /api/projects/{name}/start", r.handleStartProject)
 	mux.HandleFunc("POST /api/projects/{name}/stop", r.handleStopProject)
+
+	// API REST - Imagens Docker (V2.5)
+	mux.HandleFunc("GET /api/images", r.handleListImages)
 
 	// API de Streaming SSE (Server-Sent Events)
 	mux.HandleFunc("GET /api/containers/{id}/logs", r.handleStreamLogs)
@@ -339,3 +345,18 @@ func (w *wsWriterWrapper) Write(p []byte) (n int, err error) {
 	}
 	return len(p), nil
 }
+
+// handleListImages lida com o endpoint GET /api/images
+func (r *Router) handleListImages(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	images, err := r.listImagesUseCase.Execute(req.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(images)
+}
+
