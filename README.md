@@ -73,12 +73,17 @@ shipwright/
   *(Note: You will need to log out and log back in for this change to take effect)*.
 
 #### Running in Development Mode
-Clone the repository and run it:
-```bash
-go run cmd/server/main.go
-```
-Open your browser at:
-👉 **[http://localhost:8080](http://localhost:8080)**
+1. Copy the environment configuration template:
+   ```bash
+   cp .env.example .env
+   ```
+2. (Optional) Customize variables in `.env` (like changing the execution `PORT` or custom `DOCKER_HOST`).
+3. Run the application:
+   ```bash
+   go run cmd/server/main.go
+   ```
+4. Open your browser at:
+   👉 **[http://localhost:8080](http://localhost:8080)** (or the port defined in your `.env` file).
 
 #### Building a Production Executable
 Go compiles down to a single, self-contained binary. To build a highly optimized version (removing debug symbols to get a file size under 10MB):
@@ -140,11 +145,17 @@ O projeto foi estruturado seguindo os princípios de **Clean Architecture**, man
   ```
 
 #### Rodando em Modo de Desenvolvimento
-```bash
-go run cmd/server/main.go
-```
-Acesse no seu navegador:
-👉 **[http://localhost:8080](http://localhost:8080)**
+1. Copie o modelo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+2. (Opcional) Edite as variáveis no `.env` (como alterar a porta de escuta `PORT` ou customizar o `DOCKER_HOST`).
+3. Rode o servidor:
+   ```bash
+   go run cmd/server/main.go
+   ```
+4. Acesse no seu navegador:
+   👉 **[http://localhost:8080](http://localhost:8080)** (ou a porta configurada no seu `.env`).
 
 #### Compilando para Produção
 Para compilar um binário único e super otimizado (geralmente menor do que 10MB):
