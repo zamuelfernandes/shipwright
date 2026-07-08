@@ -31,3 +31,7 @@ Thumbs.db
 
 # Skills e Rules
 .agent/
+
+# Configurações Locais
+.env
+
