@@ -7,10 +7,10 @@ import (
 
 // StreamLogsUseCase coordena a transmissão contínua de logs.
 type StreamLogsUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.TelemetryRepository
 }
 
-func NewStreamLogsUseCase(repo domain.ContainerRepository) *StreamLogsUseCase {
+func NewStreamLogsUseCase(repo domain.TelemetryRepository) *StreamLogsUseCase {
 	return &StreamLogsUseCase{repo: repo}
 }
 

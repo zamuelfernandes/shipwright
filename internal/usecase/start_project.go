@@ -7,10 +7,10 @@ import (
 
 // StartProjectUseCase coordena a inicialização de todos os containers de um projeto do Compose.
 type StartProjectUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.ProjectRepository
 }
 
-func NewStartProjectUseCase(repo domain.ContainerRepository) *StartProjectUseCase {
+func NewStartProjectUseCase(repo domain.ProjectRepository) *StartProjectUseCase {
 	return &StartProjectUseCase{repo: repo}
 }
 

@@ -7,10 +7,10 @@ import (
 
 // StopProjectUseCase coordena a parada de todos os containers de um projeto do Compose.
 type StopProjectUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.ProjectRepository
 }
 
-func NewStopProjectUseCase(repo domain.ContainerRepository) *StopProjectUseCase {
+func NewStopProjectUseCase(repo domain.ProjectRepository) *StopProjectUseCase {
 	return &StopProjectUseCase{repo: repo}
 }
 

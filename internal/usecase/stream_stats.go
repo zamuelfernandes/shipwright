@@ -7,10 +7,10 @@ import (
 
 // StreamStatsUseCase coordena a transmissão contínua de telemetria (CPU/RAM).
 type StreamStatsUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.TelemetryRepository
 }
 
-func NewStreamStatsUseCase(repo domain.ContainerRepository) *StreamStatsUseCase {
+func NewStreamStatsUseCase(repo domain.TelemetryRepository) *StreamStatsUseCase {
 	return &StreamStatsUseCase{repo: repo}
 }
 

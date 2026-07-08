@@ -7,10 +7,10 @@ import (
 
 // ListImagesUseCase coordena a listagem de imagens do Docker.
 type ListImagesUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.ImageRepository
 }
 
-func NewListImagesUseCase(repo domain.ContainerRepository) *ListImagesUseCase {
+func NewListImagesUseCase(repo domain.ImageRepository) *ListImagesUseCase {
 	return &ListImagesUseCase{repo: repo}
 }
 

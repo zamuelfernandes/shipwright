@@ -9,10 +9,10 @@ import (
 
 // ExecContainerUseCase coordena a execução de um shell interativo no container.
 type ExecContainerUseCase struct {
-	repo domain.ContainerRepository
+	repo domain.ExecRepository
 }
 
-func NewExecContainerUseCase(repo domain.ContainerRepository) *ExecContainerUseCase {
+func NewExecContainerUseCase(repo domain.ExecRepository) *ExecContainerUseCase {
 	return &ExecContainerUseCase{repo: repo}
 }
 
