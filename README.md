@@ -22,7 +22,11 @@ Welcome to **Shipwright**! This project is a lightweight, visual manager for Doc
 ---
 
 ### 🌟 The Story & Spirit of the Project
-Shipwright was born as a coding experiment to test the limits of rapid, high-quality development in a new stack, fully guided and paired with an **AI coding assistant**. 
+
+Shipwright was born out of frustration with **Docker Desktop's heavy resource consumption** (often eating up gigabytes of RAM just to list local containers). While researching lighter alternatives, I looked at existing tools like **Portainer** (which requires running another complex container structure) and **lazydocker** (a great CLI tool, but lacking a visual browser-based GUI). 
+
+I wanted something different: a simple, visual dashboard that was ultra-lightweight, lightning fast, and focused precisely on my daily developer workflows. This curiosity sparked a coding experiment to test the limits of rapid, high-quality development in a new stack (Go + Embedded Vanilla WebUI), fully guided and paired with an **AI coding assistant**.
+
 It was built from scratch to be:
 *   **Highly Educational:** If you are learning Go, Clean Architecture, or Docker SDK, this codebase is designed to be readable, documented, and pedagogical.
 *   **100% Offline & Independent:** There are no external cloud dependencies. The entire web client (HTML/CSS/JS) is compiled directly inside a single Go binary using `//go:embed`.
@@ -132,7 +136,10 @@ Bem-vindo ao **Shipwright**! Este projeto é um gerenciador visual e extremament
 ---
 
 ### 🌟 A História e o Espírito do Projeto
-O Shipwright nasceu como um experimento de código para testar os limites do desenvolvimento rápido e de alta qualidade em uma nova stack de tecnologia, totalmente guiado e pareado com um **assistente de programação IA**. 
+
+O Shipwright nasceu da minha **insatisfação com o alto consumo de recursos do Docker Desktop** (que frequentemente consome gigabytes de memória RAM apenas para listar containers locais). Ao pesquisar alternativas mais leves, examinei soluções existentes como o **Portainer** (que exige rodar toda uma estrutura complexa de containers dedicada) e o **lazydocker** (uma excelente ferramenta de terminal CLI, mas sem uma interface gráfica visual acessível pelo navegador).
+
+Eu queria algo diferente: um dashboard simples, visual, extremamente leve, rápido e focado exatamente nas minhas principais necessidades diárias de desenvolvimento. Essa curiosidade deu início a um experimento de código para testar os limites do desenvolvimento ágil em uma nova stack (Go + WebUI Vanilla embutida), pareado com um **assistente de programação IA**.
 
 Ele foi feito sob medida para ser:
 *   **Altamente Didático:** Se você está aprendendo Go, Clean Architecture ou o SDK do Docker, esta base de código foi desenhada para ser legível, bem documentada e pedagógica.
