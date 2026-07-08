@@ -14,6 +14,7 @@ cmd/server/server
 *.log
 covreport.html
 coverage.out
+main
 
 # IDEs e Editores de Código
 .idea/
