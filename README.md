@@ -1,6 +1,25 @@
 # ⚓ Shipwright
 
+<div align="center">
+
+[![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org)
+[![Docker](https://img.shields.io/badge/Docker-Engine-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+</div>
+
 Welcome to **Shipwright**! This project is a lightweight, visual manager for Docker containers and local images, inspired by Portainer but designed to be extremely fast and resource-efficient (< 25MB RAM), written entirely in **Go**.
+
+---
+
+### 🛠️ Built With
+
+*   ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white) **Go (Golang)** — Standard Library & standard `http.ServeMux` router
+*   ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) **Moby / Docker Go SDK** — Native unix socket engine communication
+*   ![WebSockets](https://img.shields.io/badge/WebSockets-010101?style=flat-square&logo=socket.io&logoColor=white) **WebSockets & SSE** — Bi-directional channels for terminal emulators & real-time telemetry streaming
+*   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) ![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) **Vanilla Stack** — Zero UI framework footprint, embedded directly in Go binary using `//go:embed`
+
+---
 
 ### 🌟 The Story & Spirit of the Project
 Shipwright was born as a coding experiment to test the limits of rapid, high-quality development in a new stack, fully guided and paired with an **AI coding assistant**. 
@@ -100,6 +119,17 @@ To run it:
 ## Versão em Português
 
 Bem-vindo ao **Shipwright**! Este projeto é um gerenciador visual e extremamente leve de containers e imagens Docker locais, inspirado no Portainer, escrito inteiramente em **Go**.
+
+---
+
+### 🛠️ Tecnologias Utilizadas
+
+*   ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white) **Go (Golang)** — Biblioteca Padrão e roteador nativo `http.ServeMux`
+*   ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) **Moby / SDK Go do Docker** — Comunicação direta com o socket Unix do host local
+*   ![WebSockets](https://img.shields.io/badge/WebSockets-010101?style=flat-square&logo=socket.io&logoColor=white) **WebSockets & SSE** — Canais bidirecionais para terminal e fluxo SSE de métricas/logs em tempo real
+*   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) ![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) **Stack Vanilla** — UI pura em HTML5, CSS e JS, embutida no binário final via `//go:embed`
+
+---
 
 ### 🌟 A História e o Espírito do Projeto
 O Shipwright nasceu como um experimento de código para testar os limites do desenvolvimento rápido e de alta qualidade em uma nova stack de tecnologia, totalmente guiado e pareado com um **assistente de programação IA**. 
