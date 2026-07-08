@@ -1,10 +1,10 @@
-# Shipwright ⚓
+# AnchorDock ⚓
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/zamuelfernandes/shipwright?style=flat-square&logo=go&logoColor=white)](https://go.dev/)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/zamuelfernandes/anchordock?style=flat-square&logo=go&logoColor=white)](https://go.dev/)
 [![Docker Compatible](https://img.shields.io/badge/Docker-Compatible-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License](https://img.shields.io/github/license/zamuelfernandes/shipwright?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/zamuelfernandes/anchordock?style=flat-square)](LICENSE)
 
-Shipwright is an ultra-lightweight, visual local Docker container and image manager, inspired by Portainer, written entirely in **Go** and packaged as a native Linux desktop application under **12MB**.
+AnchorDock is an ultra-lightweight, visual local Docker container and image manager, inspired by Portainer, written entirely in **Go** and packaged as a native Linux desktop application under **12MB**.
 
 ---
 
@@ -20,7 +20,7 @@ Shipwright is an ultra-lightweight, visual local Docker container and image mana
 
 ## 🌟 The Story & Spirit of the Project
 
-Shipwright was born out of frustration with **Docker Desktop's heavy resource consumption** (often eating up gigabytes of RAM just to list local containers). While researching lighter alternatives, I looked at existing tools like **Portainer** (which requires running another complex container structure) and **lazydocker** (a great CLI tool, but lacking a visual browser-based GUI). 
+AnchorDock was born out of frustration with **Docker Desktop's heavy resource consumption** (often eating up gigabytes of RAM just to list local containers). While researching lighter alternatives, I looked at existing tools like **Portainer** (which requires running another complex container structure) and **lazydocker** (a great CLI tool, but lacking a visual browser-based GUI). 
 
 I wanted something different: a simple, visual dashboard that was ultra-lightweight, lightning fast, and focused precisely on my daily developer workflows. This curiosity sparked a coding experiment to test the limits of rapid, high-quality development in a new stack (Go + Embedded Vanilla WebUI), fully guided and paired with an **AI coding assistant**.
 
@@ -49,7 +49,7 @@ To keep the repository clean and structured, detailed guides have been moved to 
 
 ## 🇧🇷 Resumo do Projeto (Português)
 
-O Shipwright é um gerenciador visual e extremamente leve de containers e imagens Docker locais, inspirado no Portainer, escrito inteiramente em **Go** e compilado como uma janela desktop nativa Linux de apenas **12MB** de tamanho final.
+O AnchorDock é um gerenciador visual e extremamente leve de containers e imagens Docker locais, inspirado no Portainer, escrito inteiramente em **Go** e compilado como uma janela desktop nativa Linux de apenas **12MB** de tamanho final.
 
 Ele nasceu para resolver o alto consumo de recursos do Docker Desktop de forma offline, independente e didática. Ele separa as regras de negócio em Clean Architecture aplicando princípios de SOLID (ISP, SRP, DIP) para servir como portfólio limpo de desenvolvimento de software.
 

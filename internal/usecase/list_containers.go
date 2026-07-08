@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // ListContainersUseCase coordinates listing all containers.

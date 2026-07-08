@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
-	"github.com/zamuelfernandes/shipwright/internal/usecase"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/usecase"
 )
 
 // upgrader configures WebSocket connections.

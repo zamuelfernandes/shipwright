@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/zamuelfernandes/shipwright/internal/usecase"
+	"github.com/zamuelfernandes/anchordock/internal/usecase"
 )
 
 // ImageHandler manages Docker image HTTP routes.

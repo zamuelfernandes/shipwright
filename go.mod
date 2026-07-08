@@ -1,4 +1,4 @@
-module github.com/zamuelfernandes/shipwright
+module github.com/zamuelfernandes/anchordock
 
 go 1.25.0
 

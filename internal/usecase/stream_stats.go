@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // StreamStatsUseCase coordinates real-time stats streaming.

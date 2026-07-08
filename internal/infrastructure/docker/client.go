@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/moby/moby/client"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // DockerClient implements our domain repositories connecting directly to the Docker API.

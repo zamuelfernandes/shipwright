@@ -10,13 +10,13 @@ import (
 	"strings"
 
 	"github.com/tester305/webview_go"
-	"github.com/zamuelfernandes/shipwright/internal/infrastructure/docker"
-	infraHttp "github.com/zamuelfernandes/shipwright/internal/infrastructure/http"
-	"github.com/zamuelfernandes/shipwright/internal/usecase"
+	"github.com/zamuelfernandes/anchordock/internal/infrastructure/docker"
+	infraHttp "github.com/zamuelfernandes/anchordock/internal/infrastructure/http"
+	"github.com/zamuelfernandes/anchordock/internal/usecase"
 )
 
 func main() {
-	fmt.Println("=== Shipwright (Fase V2: Compose Projects & Terminal Interativo) ===")
+	fmt.Println("=== AnchorDock (Fase V2: Compose Projects & Terminal Interativo) ===")
 
 	loadEnv(".env")
 
@@ -91,7 +91,7 @@ func main() {
 	w := webview.New(true)
 	defer w.Destroy()
 
-	w.SetTitle("Shipwright")
+	w.SetTitle("AnchorDock")
 	w.SetSize(1200, 800, webview.HintNone)
 	w.Navigate("http://localhost" + addr)
 	w.Run()

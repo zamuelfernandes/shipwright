@@ -1,13 +1,13 @@
 # Architecture Guide
 
-Shipwright is designed under **Clean Architecture** principles to separate core business rules from presentation layers, data delivery mechanisms, and external frameworks.
+AnchorDock is designed under **Clean Architecture** principles to separate core business rules from presentation layers, data delivery mechanisms, and external frameworks.
 
 ---
 
 ## Directory Structure
 
 ```
-shipwright/
+anchordock/
 ├── cmd/
 │   └── server/
 │       └── main.go         # Wires dependencies, loads .env, launches server & GUI window
@@ -66,4 +66,4 @@ shipwright/
 
 *   **HTML/CSS/JS Web Interface**: Pure vanilla stack without heavy UI node framework requirements. Handled in a single-page layout using CSS Variables (for dark mode) and native DOM manipulation.
 *   **Embedded Assets**: Go compiles the entire folder `ui/dist` inside the final binary using `//go:embed`. When the user runs the binary, the HTTP server serves it natively from memory.
-*   **Native GUI Integration**: Shipwright launches a background HTTP server and opens a Webview window on runtime. Closing the OS window calls `server.Shutdown` which frees ports and cleanly exits the application.
+*   **Native GUI Integration**: AnchorDock launches a background HTTP server and opens a Webview window on runtime. Closing the OS window calls `server.Shutdown` which frees ports and cleanly exits the application.

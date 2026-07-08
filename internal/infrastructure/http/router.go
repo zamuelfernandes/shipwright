@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"net/http"
 
-	"github.com/zamuelfernandes/shipwright/ui"
+	"github.com/zamuelfernandes/anchordock/ui"
 )
 
 // Router maps HTTP routes, REST endpoints, WebSockets, and UI file servers to resource handlers.

@@ -1,12 +1,12 @@
 # Installation & Setup Guide
 
-This guide describes how to configure and run Shipwright on your local machine.
+This guide describes how to configure and run AnchorDock on your local machine.
 
 ---
 
 ## Prerequisites
 
-Before running or developing Shipwright, ensure your host machine has the following tools installed:
+Before running or developing AnchorDock, ensure your host machine has the following tools installed:
 
 1.  **Go (Golang)**: Version `1.22` or higher.
 2.  **Docker Engine**: Active and running on your local machine.
@@ -26,7 +26,7 @@ Before running or developing Shipwright, ensure your host machine has the follow
 
 ## Local Configuration (.env)
 
-Shipwright supports custom parameters loaded from a local environment file. 
+AnchorDock supports custom parameters loaded from a local environment file. 
 
 1.  Copy the example template file:
     ```bash
@@ -41,7 +41,7 @@ Shipwright supports custom parameters loaded from a local environment file.
 
 ## Running in Development Mode
 
-To run Shipwright without compiling a persistent executable binary (useful during codebase editing):
+To run AnchorDock without compiling a persistent executable binary (useful during codebase editing):
 
 ```bash
 go run cmd/server/main.go

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // PruneContainersUseCase coordinates cleaning up stopped containers.

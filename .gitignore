@@ -1,5 +1,5 @@
 # Binários e Executáveis
-shipwright
+anchordock
 cmd/server/server
 *.exe
 *.exe~

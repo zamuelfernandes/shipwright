@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // ExecContainerUseCase coordinates running an interactive shell session inside a container.

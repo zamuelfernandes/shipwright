@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"github.com/zamuelfernandes/shipwright/internal/domain"
+	"github.com/zamuelfernandes/anchordock/internal/domain"
 )
 
 // StopProjectUseCase coordinates batch stop commands of Compose projects.
