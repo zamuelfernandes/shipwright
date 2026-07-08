@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/moby/moby/client v0.5.0
+	github.com/tester305/webview_go v0.0.0-20260106181019-61663a8bc94d
 )
 
 require (

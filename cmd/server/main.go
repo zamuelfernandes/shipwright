@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tester305/webview_go"
 	"github.com/zamuelfernandes/shipwright/internal/infrastructure/docker"
 	infraHttp "github.com/zamuelfernandes/shipwright/internal/infrastructure/http"
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
@@ -72,18 +73,31 @@ func main() {
 		imageHandler,
 	)
 
-	// 5. Start HTTP server on the configured port
+	// 5. Start HTTP server in a background goroutine
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	addr := ":" + port
-	fmt.Printf("\n⚓ Shipwright running at: http://localhost%s\n", addr)
-	fmt.Println("Press Ctrl+C to stop the server.")
+	
+	server := &http.Server{Addr: addr, Handler: router}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Fatal HTTP Server error: %v", err)
+		}
+	}()
 
-	if err := http.ListenAndServe(addr, router); err != nil {
-		log.Fatalf("Fatal HTTP Server error: %v", err)
-	}
+	// 6. Open native OS desktop window pointing to the local HTTP server
+	w := webview.New(true)
+	defer w.Destroy()
+
+	w.SetTitle("Shipwright")
+	w.SetSize(1200, 800, webview.HintNone)
+	w.Navigate("http://localhost" + addr)
+	w.Run()
+
+	// Shutdown HTTP server cleanly when window is closed
+	server.Shutdown(context.Background())
 }
 
 // loadEnv reads environment variables from a local .env file.
