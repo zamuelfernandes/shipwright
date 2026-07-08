@@ -166,7 +166,7 @@ O projeto foi estruturado seguindo os princípios de **Clean Architecture**, man
 
 *   **Domain (Domínio):** Contém as entidades principais (`Container`, `Image`) e a assinatura de interfaces como contratos.
 *   **Usecase (Casos de Uso):** Contém a lógica de negócio pura (listar containers, iniciar projetos, conectar terminal).
-*   **Infrastructure (Infraestrutura):** Adaptadores e ferramentas externas. O [client.go](file:///home/samuel/Workspace/Pessoal/Go/shipwright/internal/infrastructure/docker/client.go) faz a ponte com o SDK Oficial do Docker, e o [router.go](file:///home/samuel/Workspace/Pessoal/Go/shipwright/internal/infrastructure/http/router.go) expõe a API HTTP e conexões WebSocket.
+*   **Infrastructure (Infraestrutura):** Adaptadores e ferramentas externas. O [client.go](./internal/infrastructure/docker/client.go) faz a ponte com o SDK Oficial do Docker, e o [router.go](./internal/infrastructure/http/router.go) expõe a API HTTP e conexões WebSocket.
 *   **UI:** Arquivos de front-end (HTML/CSS/JS puros e Xterm.js) embutidos no binário final.
 
 ---
