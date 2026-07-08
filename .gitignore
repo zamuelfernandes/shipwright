@@ -27,3 +27,6 @@ coverage.out
 # Arquivos de Sistema Operacional
 .DS_Store
 Thumbs.db
+
+# Skills e Rules
+.agent/

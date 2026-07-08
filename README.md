@@ -1,83 +1,163 @@
 # ⚓ Shipwright
 
-O Shipwright é um gerenciador visual e extremamente leve de containers Docker Engine, inspirado no Portainer, escrito inteiramente em **Go**.
+Welcome to **Shipwright**! This project is a lightweight, visual manager for Docker containers and local images, inspired by Portainer but designed to be extremely fast and resource-efficient (< 25MB RAM), written entirely in **Go**.
 
-A ferramenta foi projetada com base nos princípios de **Clean Architecture**, foco absoluto em **eficiência de recursos (CPU/RAM)** e **portabilidade**. Ela integra uma interface gráfica minimalista embutida diretamente dentro de um único arquivo executável usando o recurso `//go:embed` do Go, rodando de forma 100% local e offline.
-
----
-
-## 🚀 Funcionalidades Principais
-
-### Gerenciamento de Projetos e Containers (V2)
-- **Agrupamento por Docker Compose:** Agrupa visualmente os containers que pertencem ao mesmo projeto do Docker Compose, facilitando o gerenciamento.
-- **Comandos em Lote do Compose:** Inicia e para projetos do Compose de forma concorrente utilizando goroutines e `sync.WaitGroup` no Go (equivalente aos comandos `docker compose up` e `down` em lote).
-- **Listagem e Controle de Containers Avulsos:** Detecta todos os containers locais ativos e parados através de conexão direta com o Docker Engine Socket UNIX.
-- **Controle de Ciclo de Vida Individual:** Botões para iniciar, parar e executar limpeza completa de containers inativos (Docker Prune).
-
-### Monitoramento e Interatividade em Tempo Real (V2)
-- **Terminal Interativo no Navegador (Exec):** Abre um console web interativo e funcional emulando um terminal VT100 (via **Xterm.js**) utilizando WebSockets para conexões bidirecionais diretas com o shell do container (`/bin/bash` ou `/bin/sh`).
-- **Streaming de Logs (Tempo Real):** Conexão contínua usando Server-Sent Events (SSE) para ler logs do container sem necessidade de fazer requisições constantes (polling).
-- **Telemetria ao Vivo (Stats):** Medição em tempo real de consumo de CPU (%) e uso de memória RAM (MB e %) com barras de progresso dinâmicas.
+### 🌟 The Story & Spirit of the Project
+Shipwright was born as a coding experiment to test the limits of rapid, high-quality development in a new stack, fully guided and paired with an **AI coding assistant**. 
+It was built from scratch to be:
+*   **Highly Educational:** If you are learning Go, Clean Architecture, or Docker SDK, this codebase is designed to be readable, documented, and pedagogical.
+*   **100% Offline & Independent:** There are no external cloud dependencies. The entire web client (HTML/CSS/JS) is compiled directly inside a single Go binary using `//go:embed`.
+*   **Open & Reusable:** Feel free to fork it, read it, break it, and use it as a boilerplate for your own Go/Docker tools!
 
 ---
 
-## 🏛️ Arquitetura do Projeto
+## English Version
 
-O projeto segue os princípios de **Clean Architecture** para Go, separando as regras de negócio de detalhes de infraestrutura (como o SDK do Docker ou o servidor HTTP):
+### 🚀 Key Features
+
+*   **Docker Compose Grouping:** Automatically groups containers belonging to the same Docker Compose project based on labels.
+*   **Batch Actions:** Start and stop entire Compose projects concurrently using Go's goroutines and `sync.WaitGroup`.
+*   **Interactive Web Terminal:** Open a live shell session (`/bin/bash` or `/bin/sh`) inside any running container directly in your browser, powered by **Xterm.js** and WebSockets.
+*   **Inline Monitoring:** The logs and terminal panel expand dynamically directly under the clicked container row in the table, preventing screen clutter.
+*   **Persistent Telemetry:** Real-time CPU (%) and RAM (MB/%) consumption graphs stay visible at the top of the monitor panel, even when switching tabs between logs and terminal.
+*   **Local Images Dashboard:** Lists all downloaded Docker images, showing short IDs, tags, formatted sizes, and creation dates, positioned at the top of the dashboard.
+*   **Collapsible Cards:** Image lists and Compose project cards can be collapsed/minimized to save screen space.
+
+---
+
+### 🏛️ Architecture & Inner Workings
+
+The codebase is structured under **Clean Architecture** principles to separate business logic from delivery mechanisms and external dependencies:
 
 ```
 shipwright/
 ├── cmd/
 │   └── server/
-│       └── main.go         # Ponto de entrada (Inicialização e Injeção de Dependências)
+│       └── main.go         # Entry point (Wires dependencies and starts HTTP server)
 ├── internal/
-│   ├── domain/             # Camada de Domínio (Entidades e Interfaces Abstratas)
+│   ├── domain/             # Domain Layer (Core entities and abstract interfaces)
 │   │   ├── container.go
+│   │   ├── image.go        # Image Entity
 │   │   └── stats.go
-│   ├── usecase/            # Camada de Regras de Negócio (Casos de Uso)
+│   ├── usecase/            # Usecase Layer (Pure business logic)
 │   │   ├── list_containers.go
+│   │   ├── list_images.go
 │   │   ├── manage_lifecycle.go
 │   │   ├── start_project.go
 │   │   ├── stop_project.go
 │   │   ├── exec_container.go
 │   │   ├── stream_logs.go
 │   │   └── stream_stats.go
-│   └── infrastructure/     # Camada de Infraestrutura (Drivers e Adaptadores)
-│       ├── docker/         # Cliente do SDK Oficial do Moby/Docker v29
+│   └── infrastructure/     # Infrastructure Layer (Adapters & External tools)
+│       ├── docker/         # Official Moby/Docker SDK v29 Adapter
 │       │   └── client.go
-│       └── http/           # Servidor e Roteador HTTP Nativo (Go 1.22+ e WebSockets)
+│       └── http/           # Standard HTTP Router (Go 1.22+ routes) & WebSockets
 │           └── router.go
-└── ui/                     # Interface Web (HTML/CSS/JS puros e Xterm.js)
-    ├── embed.go            # Configuração do //go:embed
+└── ui/                     # UI Web Assets (Vanilla HTML/CSS/JS & Xterm.js)
+    ├── embed.go            # Embedding directives (//go:embed)
     └── dist/
-        └── index.html      # Dashboard do Console
+        └── index.html      # Single page dashboard application
 ```
 
 ---
 
-## 🛠️ Como Executar Localmente
+### 🛠️ How to Run & Build
 
-### Pré-requisitos
-- **Go** (versão 1.22+ recomendada, testado com Go 1.26.0)
-- **Docker Engine** ativo na máquina local.
-- No Linux/Ubuntu, certifique-se de que seu usuário pertence ao grupo `docker` para que o programa possa ler o socket `/var/run/docker.sock` sem precisar de privilégios de `sudo`:
+#### Prerequisites
+- **Go 1.22+**
+- **Docker Engine** running locally.
+- On Linux, make sure your user belongs to the `docker` group so the binary can read `/var/run/docker.sock` without `sudo`:
   ```bash
   sudo usermod -aG docker $USER
   ```
-  *(Nota: Se você acabou de rodar o comando acima, é necessário fazer logout e login no sistema para aplicar as permissões)*.
+  *(Note: You will need to log out and log back in for this change to take effect)*.
 
-### Executando em Modo de Desenvolvimento
-Clone o repositório e execute a aplicação diretamente com o comando do Go:
+#### Running in Development Mode
+Clone the repository and run it:
 ```bash
-# Executa e compila o servidor local
 go run cmd/server/main.go
 ```
-
-Acesse o console no seu navegador:
+Open your browser at:
 👉 **[http://localhost:8080](http://localhost:8080)**
+
+#### Building a Production Executable
+Go compiles down to a single, self-contained binary. To build a highly optimized version (removing debug symbols to get a file size under 10MB):
+```bash
+go build -ldflags="-s -w" -o shipwright cmd/server/main.go
+```
+To run it:
+```bash
+./shipwright
+```
 
 ---
 
-## 📄 Licença
+## Versão em Português
 
-Este projeto está sob os termos da licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Bem-vindo ao **Shipwright**! Este projeto é um gerenciador visual e extremamente leve de containers e imagens Docker locais, inspirado no Portainer, escrito inteiramente em **Go**.
+
+### 🌟 A História e o Espírito do Projeto
+O Shipwright nasceu como um experimento de código para testar os limites do desenvolvimento rápido e de alta qualidade em uma nova stack de tecnologia, totalmente guiado e pareado com um **assistente de programação IA**. 
+
+Ele foi feito sob medida para ser:
+*   **Altamente Didático:** Se você está aprendendo Go, Clean Architecture ou o SDK do Docker, esta base de código foi desenhada para ser legível, bem documentada e pedagógica.
+*   **100% Offline e Independente:** Sem dependências externas de nuvem. Toda a interface web é compilada dentro de um único binário Go usando `//go:embed`.
+*   **Aberto e Reutilizável:** Fique à vontade para fazer forks, ler, quebrar e usar como base para suas próprias ferramentas em Go e Docker!
+
+---
+
+### 🚀 Funcionalidades Principais
+
+*   **Agrupamento por Docker Compose:** Agrupa visualmente os containers que pertencem ao mesmo projeto Compose através de labels.
+*   **Comandos em Lote do Compose:** Inicia e para projetos Compose inteiros de forma concorrente utilizando goroutines e `sync.WaitGroup` no Go.
+*   **Terminal Web Interativo:** Abre uma sessão de shell ativa (`/bin/bash` ou `/bin/sh`) dentro de qualquer container em execução diretamente no navegador usando **Xterm.js** e WebSockets.
+*   **Monitoramento Inline:** O painel de logs/terminal expande-se dinamicamente logo abaixo da linha do container selecionado na tabela, evitando poluição visual.
+*   **Telemetria Persistente:** Gráficos dinâmicos de CPU (%) e RAM (MB/%) no topo do painel de monitoramento, que continuam visíveis mesmo quando você muda de aba para rodar comandos no terminal.
+*   **Painel de Imagens Locais:** Lista todas as imagens Docker salvas na máquina local no topo do dashboard, mostrando tags, tamanhos formatados e data de criação.
+*   **Cards Minimizáveis:** Possibilidade de recolher/minimizar os painéis de Imagens e Compose para economizar espaço de tela.
+
+---
+
+### 🏛️ Arquitetura e Funcionamento
+
+O projeto foi estruturado seguindo os princípios de **Clean Architecture**, mantendo as regras de negócio isoladas das ferramentas externas (como roteador HTTP e o cliente Docker):
+
+*   **Domain (Domínio):** Contém as entidades principais (`Container`, `Image`) e a assinatura de interfaces como contratos.
+*   **Usecase (Casos de Uso):** Contém a lógica de negócio pura (listar containers, iniciar projetos, conectar terminal).
+*   **Infrastructure (Infraestrutura):** Adaptadores e ferramentas externas. O [client.go](file:///home/samuel/Workspace/Pessoal/Go/shipwright/internal/infrastructure/docker/client.go) faz a ponte com o SDK Oficial do Docker, e o [router.go](file:///home/samuel/Workspace/Pessoal/Go/shipwright/internal/infrastructure/http/router.go) expõe a API HTTP e conexões WebSocket.
+*   **UI:** Arquivos de front-end (HTML/CSS/JS puros e Xterm.js) embutidos no binário final.
+
+---
+
+### 🛠️ Como Executar e Compilar
+
+#### Pré-requisitos
+- **Go 1.22+**
+- **Docker Engine** ativo na máquina.
+- No Linux/Ubuntu, garanta que seu usuário está no grupo do docker:
+  ```bash
+  sudo usermod -aG docker $USER
+  ```
+
+#### Rodando em Modo de Desenvolvimento
+```bash
+go run cmd/server/main.go
+```
+Acesse no seu navegador:
+👉 **[http://localhost:8080](http://localhost:8080)**
+
+#### Compilando para Produção
+Para compilar um binário único e super otimizado (geralmente menor do que 10MB):
+```bash
+go build -ldflags="-s -w" -o shipwright cmd/server/main.go
+```
+Para executar o binário gerado:
+```bash
+./shipwright
+```
+
+---
+
+## 📄 License / Licença
+
+This project is licensed under the **MIT License**. / Este projeto está sob a licença **MIT**. See the [LICENSE](LICENSE) file for details.
