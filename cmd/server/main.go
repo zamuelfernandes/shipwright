@@ -45,18 +45,29 @@ func main() {
 		log.Printf("Sucesso: Conectado ao Docker Daemon local (%d containers encontrados).", len(containers))
 	}
 
-	// 3. Inicialização do roteador HTTP injetando todas as dependências de regras de negócio
-	router := infraHttp.NewRouter(
+	// 3. Inicialização dos Handlers HTTP segregados (SRP)
+	containerHandler := infraHttp.NewContainerHandler(
 		listUC,
 		startUC,
 		stopUC,
 		pruneUC,
 		streamLogsUC,
 		streamStatsUC,
+		execUC,
+	)
+	projectHandler := infraHttp.NewProjectHandler(
 		startProjUC,
 		stopProjUC,
-		execUC,
+	)
+	imageHandler := infraHttp.NewImageHandler(
 		listImagesUC,
+	)
+
+	// 4. Inicialização do roteador HTTP injetando os handlers
+	router := infraHttp.NewRouter(
+		containerHandler,
+		projectHandler,
+		imageHandler,
 	)
 
 	// 4. Inicialização do Servidor HTTP na porta local 8080
