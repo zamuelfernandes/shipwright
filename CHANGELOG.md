@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-07-08
+
+### Added
+- Native GTK Webkit window desktop client integration using `webview_go` (V2.14).
+- Dedicated `/docs` folder with detailed guides for setup, compiling/building, and architecture.
+- Page favicon integration using the project's anchor logo in `index.html` (V2.10).
+- Cross-platform DOCKER_HOST suggestions for Linux, Windows Named Pipes, TCP and SSH in `.env.example` (V2.13).
+
+### Changed
+- Translated the entire UI (labels, buttons, tables, logs) to English (V2.12).
+- Cleaned up redundant comments in codebase and translated remaining technical comments to English (V2.11).
+- Restructured `README.md` to be a concise bilingual landing page pointing to `/docs` guides.
+
 ## [2.9.0] - 2026-07-08
 
 ### Added
