@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StopContainerUseCase coordena a ação de parar um container.
+// StopContainerUseCase coordinates stopping a single container.
 type StopContainerUseCase struct {
 	repo domain.ContainerRepository
 }

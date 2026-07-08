@@ -14,44 +14,40 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
 )
 
-// main é o ponto de entrada da aplicação.
 func main() {
 	fmt.Println("=== Shipwright (Fase V2: Compose Projects & Terminal Interativo) ===")
 
-	// Carrega arquivo .env local se existir
 	loadEnv(".env")
 
-	// 1. Inicialização da Infraestrutura (Docker Client)
+	// 1. Initialize Infrastructure (Docker Client connection)
 	dockerClient, err := docker.NewDockerClient()
 	if err != nil {
-		log.Fatalf("Erro ao inicializar cliente Docker: %v", err)
+		log.Fatalf("Error connecting to Docker Client: %v", err)
 	}
 
-	// 2. Instanciação de todos os Casos de Uso
+	// 2. Instantiate Usecases
 	listUC := usecase.NewListContainersUseCase(dockerClient)
 	startUC := usecase.NewStartContainerUseCase(dockerClient)
 	stopUC := usecase.NewStopContainerUseCase(dockerClient)
 	pruneUC := usecase.NewPruneContainersUseCase(dockerClient)
 	
-	// Streaming SSE
 	streamLogsUC := usecase.NewStreamLogsUseCase(dockerClient)
 	streamStatsUC := usecase.NewStreamStatsUseCase(dockerClient)
 
-	// V2: Compose e Terminal Exec
 	startProjUC := usecase.NewStartProjectUseCase(dockerClient)
 	stopProjUC := usecase.NewStopProjectUseCase(dockerClient)
 	execUC := usecase.NewExecContainerUseCase(dockerClient)
 	listImagesUC := usecase.NewListImagesUseCase(dockerClient)
 
-	// Teste rápido de conexão para garantir que o socket está acessível
+	// Quick connection test to verify Docker Socket accessibility
 	containers, err := listUC.Execute(context.Background())
 	if err != nil {
-		log.Printf("Aviso: Falha ao conectar ao Docker: %v", err)
+		log.Printf("Warning: Failed to connect to Docker daemon: %v", err)
 	} else {
-		log.Printf("Sucesso: Conectado ao Docker Daemon local (%d containers encontrados).", len(containers))
+		log.Printf("Success: Connected to local Docker daemon (%d containers detected).", len(containers))
 	}
 
-	// 3. Inicialização dos Handlers HTTP segregados (SRP)
+	// 3. Initialize HTTP resource handlers (SRP Controllers)
 	containerHandler := infraHttp.NewContainerHandler(
 		listUC,
 		startUC,
@@ -69,32 +65,32 @@ func main() {
 		listImagesUC,
 	)
 
-	// 4. Inicialização do roteador HTTP injetando os handlers
+	// 4. Initialize HTTP multiplexer router
 	router := infraHttp.NewRouter(
 		containerHandler,
 		projectHandler,
 		imageHandler,
 	)
 
-	// 5. Inicialização do Servidor HTTP na porta local configurada
+	// 5. Start HTTP server on the configured port
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	addr := ":" + port
-	fmt.Printf("\n⚓ Shipwright rodando em: http://localhost%s\n", addr)
-	fmt.Println("Pressione Ctrl+C para encerrar o servidor.")
+	fmt.Printf("\n⚓ Shipwright running at: http://localhost%s\n", addr)
+	fmt.Println("Press Ctrl+C to stop the server.")
 
 	if err := http.ListenAndServe(addr, router); err != nil {
-		log.Fatalf("Erro fatal no servidor HTTP: %v", err)
+		log.Fatalf("Fatal HTTP Server error: %v", err)
 	}
 }
 
-// loadEnv lê um arquivo .env se ele existir e carrega as variáveis no ambiente.
+// loadEnv reads environment variables from a local .env file.
 func loadEnv(filepath string) {
 	file, err := os.Open(filepath)
 	if err != nil {
-		return // Se não existir, apenas ignora e usa as variáveis de ambiente existentes
+		return
 	}
 	defer file.Close()
 
@@ -108,7 +104,6 @@ func loadEnv(filepath string) {
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
 			value := strings.TrimSpace(parts[1])
-			// Se a variável já estiver definida no ambiente do OS, não sobrescreve
 			if os.Getenv(key) == "" {
 				os.Setenv(key, value)
 			}

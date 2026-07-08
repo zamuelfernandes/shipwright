@@ -7,7 +7,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
 )
 
-// ProjectHandler gerencia as rotas HTTP associadas a projetos Docker Compose.
+// ProjectHandler manages Docker Compose project HTTP routes.
 type ProjectHandler struct {
 	startProjectUseCase *usecase.StartProjectUseCase
 	stopProjectUseCase  *usecase.StopProjectUseCase
@@ -23,7 +23,7 @@ func NewProjectHandler(
 	}
 }
 
-// HandleStartProject lida com o endpoint POST /api/projects/{name}/start
+// HandleStartProject handles POST /api/projects/{name}/start.
 func (h *ProjectHandler) HandleStartProject(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	name := req.PathValue("name")
@@ -36,10 +36,10 @@ func (h *ProjectHandler) HandleStartProject(w http.ResponseWriter, req *http.Req
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "projeto inicializado com sucesso"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "project started successfully"})
 }
 
-// HandleStopProject lida com o endpoint POST /api/projects/{name}/stop
+// HandleStopProject handles POST /api/projects/{name}/stop.
 func (h *ProjectHandler) HandleStopProject(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	name := req.PathValue("name")
@@ -52,5 +52,5 @@ func (h *ProjectHandler) HandleStopProject(w http.ResponseWriter, req *http.Requ
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "projeto pausado com sucesso"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "project stopped successfully"})
 }

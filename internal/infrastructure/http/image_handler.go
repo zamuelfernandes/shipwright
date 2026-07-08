@@ -7,7 +7,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
 )
 
-// ImageHandler gerencia as rotas HTTP associadas a imagens Docker.
+// ImageHandler manages Docker image HTTP routes.
 type ImageHandler struct {
 	listImagesUseCase *usecase.ListImagesUseCase
 }
@@ -18,7 +18,7 @@ func NewImageHandler(listImagesUC *usecase.ListImagesUseCase) *ImageHandler {
 	}
 }
 
-// HandleListImages lida com o endpoint GET /api/images
+// HandleListImages handles GET /api/images.
 func (h *ImageHandler) HandleListImages(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

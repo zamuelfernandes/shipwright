@@ -5,8 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StartContainerUseCase coordena a ação de iniciar um container.
-// Em Flutter, isso seria o caso de uso 'StartContainerUseCase'.
+// StartContainerUseCase coordinates starting a single container.
 type StartContainerUseCase struct {
 	repo domain.ContainerRepository
 }

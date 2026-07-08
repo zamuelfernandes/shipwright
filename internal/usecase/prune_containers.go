@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// PruneContainersUseCase coordena a ação de remover todos os containers parados.
+// PruneContainersUseCase coordinates cleaning up stopped containers.
 type PruneContainersUseCase struct {
 	repo domain.ContainerRepository
 }

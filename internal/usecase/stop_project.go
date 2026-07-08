@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StopProjectUseCase coordena a parada de todos os containers de um projeto do Compose.
+// StopProjectUseCase coordinates batch stop commands of Compose projects.
 type StopProjectUseCase struct {
 	repo domain.ProjectRepository
 }

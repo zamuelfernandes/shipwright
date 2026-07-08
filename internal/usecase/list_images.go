@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// ListImagesUseCase coordena a listagem de imagens do Docker.
+// ListImagesUseCase coordinates listing local Docker images.
 type ListImagesUseCase struct {
 	repo domain.ImageRepository
 }

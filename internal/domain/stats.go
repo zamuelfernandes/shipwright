@@ -2,7 +2,7 @@ package domain
 
 import "context"
 
-// ContainerStats representa a telemetria (uso de CPU e memória RAM) simplificada de um container.
+// ContainerStats represents simplified real-time telemetry (CPU/RAM) of a container.
 type ContainerStats struct {
 	CPUPercent       float64 `json:"cpu_percent"`
 	MemoryUsageBytes uint64  `json:"memory_usage_bytes"`
@@ -10,7 +10,7 @@ type ContainerStats struct {
 	MemoryPercent    float64 `json:"memory_percent"`
 }
 
-// TelemetryRepository define o contrato para monitoramento e logs de containers.
+// TelemetryRepository defines the contract for container logs and telemetry streaming.
 type TelemetryRepository interface {
 	StreamLogs(ctx context.Context, id string, logsChan chan<- string, errChan chan<- error)
 	StreamStats(ctx context.Context, id string, statsChan chan<- ContainerStats, errChan chan<- error)

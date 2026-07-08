@@ -2,7 +2,7 @@ package domain
 
 import "context"
 
-// ProjectRepository define o contrato para controle de lote (start/stop) de projetos Docker Compose.
+// ProjectRepository defines the contract for batch start/stop control of Docker Compose projects.
 type ProjectRepository interface {
 	StartProject(ctx context.Context, project string) error
 	StopProject(ctx context.Context, project string) error

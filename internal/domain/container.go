@@ -1,11 +1,8 @@
 package domain
 
-import (
-	"context"
-)
+import "context"
 
-// Container representa os dados simplificados de um container Docker para o Shipwright.
-// Em Flutter, isso seria um Modelo de Dados (Model ou Entity) contendo campos e possivelmente serialização JSON.
+// Container represents simplified Docker container metadata.
 type Container struct {
 	ID          string   `json:"id"`
 	Names       []string `json:"names"`
@@ -16,7 +13,7 @@ type Container struct {
 	ComposeServ string   `json:"compose_service"`
 }
 
-// ContainerRepository define o contrato (interface) para manipulação de dados dos containers.
+// ContainerRepository defines the contract for container lifecycle operations.
 type ContainerRepository interface {
 	ListContainers(ctx context.Context) ([]Container, error)
 	StartContainer(ctx context.Context, id string) error

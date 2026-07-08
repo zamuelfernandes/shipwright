@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StreamStatsUseCase coordena a transmissão contínua de telemetria (CPU/RAM).
+// StreamStatsUseCase coordinates real-time stats streaming.
 type StreamStatsUseCase struct {
 	repo domain.TelemetryRepository
 }

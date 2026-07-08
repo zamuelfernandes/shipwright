@@ -13,14 +13,14 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/usecase"
 )
 
-// Upgrader para configurar conexões WebSocket
+// upgrader configures WebSocket connections.
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Permite qualquer origem em ambiente de desenvolvimento local
+		return true // Allow all origins for local development.
 	},
 }
 
-// ContainerHandler gerencia as rotas HTTP e WebSocket associadas a containers.
+// ContainerHandler manages container-related HTTP routes, SSE telemetry streams, and WebSockets.
 type ContainerHandler struct {
 	listUseCase        *usecase.ListContainersUseCase
 	startUseCase       *usecase.StartContainerUseCase
@@ -51,7 +51,7 @@ func NewContainerHandler(
 	}
 }
 
-// HandleListContainers lida com o endpoint GET /api/containers
+// HandleListContainers handles GET /api/containers.
 func (h *ContainerHandler) HandleListContainers(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -65,7 +65,7 @@ func (h *ContainerHandler) HandleListContainers(w http.ResponseWriter, req *http
 	json.NewEncoder(w).Encode(containers)
 }
 
-// HandleStartContainer lida com o endpoint POST /api/containers/{id}/start
+// HandleStartContainer handles POST /api/containers/{id}/start.
 func (h *ContainerHandler) HandleStartContainer(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := req.PathValue("id")
@@ -78,10 +78,10 @@ func (h *ContainerHandler) HandleStartContainer(w http.ResponseWriter, req *http
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "container iniciado com sucesso"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "container started successfully"})
 }
 
-// HandleStopContainer lida com o endpoint POST /api/containers/{id}/stop
+// HandleStopContainer handles POST /api/containers/{id}/stop.
 func (h *ContainerHandler) HandleStopContainer(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := req.PathValue("id")
@@ -94,10 +94,10 @@ func (h *ContainerHandler) HandleStopContainer(w http.ResponseWriter, req *http.
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "container parado com sucesso"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "container stopped successfully"})
 }
 
-// HandlePruneContainers lida com o endpoint DELETE /api/containers/prune
+// HandlePruneContainers handles DELETE /api/containers/prune.
 func (h *ContainerHandler) HandlePruneContainers(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -109,10 +109,10 @@ func (h *ContainerHandler) HandlePruneContainers(w http.ResponseWriter, req *htt
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "limpeza de containers concluída"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "prune operation finished successfully"})
 }
 
-// HandleStreamLogs gerencia o streaming SSE de logs do container
+// HandleStreamLogs handles SSE logs stream on GET /api/containers/{id}/logs.
 func (h *ContainerHandler) HandleStreamLogs(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -123,7 +123,7 @@ func (h *ContainerHandler) HandleStreamLogs(w http.ResponseWriter, req *http.Req
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "Streaming não suportado", http.StatusInternalServerError)
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h *ContainerHandler) HandleStreamLogs(w http.ResponseWriter, req *http.Req
 
 	go h.streamLogsUseCase.Execute(ctx, id, logsChan, errChan)
 
-	fmt.Fprint(w, "event: open\ndata: conectado aos logs\n\n")
+	fmt.Fprint(w, "event: open\ndata: connected to logs\n\n")
 	flusher.Flush()
 
 	for {
@@ -156,7 +156,7 @@ func (h *ContainerHandler) HandleStreamLogs(w http.ResponseWriter, req *http.Req
 	}
 }
 
-// HandleStreamStats gerencia o streaming SSE de estatísticas de CPU/RAM
+// HandleStreamStats handles SSE stats stream on GET /api/containers/{id}/stats.
 func (h *ContainerHandler) HandleStreamStats(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -167,7 +167,7 @@ func (h *ContainerHandler) HandleStreamStats(w http.ResponseWriter, req *http.Re
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "Streaming não suportado", http.StatusInternalServerError)
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (h *ContainerHandler) HandleStreamStats(w http.ResponseWriter, req *http.Re
 
 	go h.streamStatsUseCase.Execute(ctx, id, statsChan, errChan)
 
-	fmt.Fprint(w, "event: open\ndata: conectado à telemetria\n\n")
+	fmt.Fprint(w, "event: open\ndata: connected to stats\n\n")
 	flusher.Flush()
 
 	for {
@@ -204,24 +204,21 @@ func (h *ContainerHandler) HandleStreamStats(w http.ResponseWriter, req *http.Re
 	}
 }
 
-// HandleExecContainer lida com a conexão WebSocket para o terminal interativo (V2)
+// HandleExecContainer handles WebSocket connections for interactive terminal.
 func (h *ContainerHandler) HandleExecContainer(w http.ResponseWriter, req *http.Request) {
 	id := req.PathValue("id")
-	log.Printf("[HTTP] Recebido pedido de terminal WebSocket para o container: %s", id)
+	log.Printf("[HTTP] Exec request received for container: %s", id)
 
-	// Upgrade da conexão HTTP comum para WebSocket
 	conn, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
-		log.Printf("[HTTP] Erro no upgrade do websocket para exec: %v", err)
+		log.Printf("[HTTP] WebSocket upgrade failed: %v", err)
 		return
 	}
 	defer conn.Close()
-	log.Printf("[HTTP] Conexão WebSocket de terminal ativa para o container %s", id)
+	log.Printf("[HTTP] WebSocket connection active for container: %s", id)
 
-	// io.Pipe liga a escrita do WebSocket à leitura do stdin do Exec do Docker
 	stdinReader, stdinWriter := io.Pipe()
 
-	// Goroutine para ler teclas do WebSocket -> escreve no Pipe (stdinWriter)
 	go func() {
 		defer stdinWriter.Close()
 		for {
@@ -236,26 +233,23 @@ func (h *ContainerHandler) HandleExecContainer(w http.ResponseWriter, req *http.
 		}
 	}()
 
-	// Adaptador io.Writer customizado para escrever de volta no WebSocket
 	wsWriter := &wsWriterWrapper{conn: conn}
 
-	// Executa a sessão interativa dentro do container. Bloqueia até a sessão encerrar.
 	err = h.execUseCase.Execute(req.Context(), id, stdinReader, wsWriter)
 	if err != nil {
-		log.Printf("[HTTP] Erro na execução do terminal no container %s: %v", id, err)
-		_ = conn.WriteMessage(websocket.TextMessage, []byte("\r\nErro ao iniciar terminal: "+err.Error()+"\r\n"))
+		log.Printf("[HTTP] Exec session error: %v", err)
+		_ = conn.WriteMessage(websocket.TextMessage, []byte("\r\nTerminal initialization failed: "+err.Error()+"\r\n"))
 	} else {
-		log.Printf("[HTTP] Conexão WebSocket de terminal encerrada para o container %s", id)
+		log.Printf("[HTTP] Exec session closed for container: %s", id)
 	}
 }
 
-// wsWriterWrapper adapta a conexão WebSocket para que satisfaça a interface io.Writer
+// wsWriterWrapper wraps WebSocket connections to satisfy io.Writer interface.
 type wsWriterWrapper struct {
 	conn *websocket.Conn
 }
 
 func (w *wsWriterWrapper) Write(p []byte) (n int, err error) {
-	// Escreve os bytes recebidos da saída do terminal do container para o WebSocket como texto
 	err = w.conn.WriteMessage(websocket.TextMessage, p)
 	if err != nil {
 		return 0, err

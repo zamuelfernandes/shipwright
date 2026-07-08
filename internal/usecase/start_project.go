@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StartProjectUseCase coordena a inicialização de todos os containers de um projeto do Compose.
+// StartProjectUseCase coordinates batch start commands of Compose projects.
 type StartProjectUseCase struct {
 	repo domain.ProjectRepository
 }

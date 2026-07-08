@@ -7,7 +7,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// ExecContainerUseCase coordena a execução de um shell interativo no container.
+// ExecContainerUseCase coordinates running an interactive shell session inside a container.
 type ExecContainerUseCase struct {
 	repo domain.ExecRepository
 }

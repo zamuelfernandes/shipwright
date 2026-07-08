@@ -5,7 +5,7 @@ import (
 	"github.com/zamuelfernandes/shipwright/internal/domain"
 )
 
-// StreamLogsUseCase coordena a transmissão contínua de logs.
+// StreamLogsUseCase coordinates logging streams.
 type StreamLogsUseCase struct {
 	repo domain.TelemetryRepository
 }
